@@ -183,7 +183,7 @@ export function LandingFooter() {
         <div className="py-6">
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <p className="text-sm text-muted-foreground">
-              © 2024 MCP-QOS. Tất cả quyền được bảo lưu.
+              © 2025 Scanorderly. Tất cả quyền được bảo lưu.
             </p>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <span>Proudly made in Vietnam 🇻🇳</span>

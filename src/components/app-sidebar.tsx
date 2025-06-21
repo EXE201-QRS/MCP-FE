@@ -33,6 +33,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { useAuth } from "@/contexts/auth-context";
+import Link from "next/link";
 
 const data = {
   user: {
@@ -162,6 +164,13 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { user } = useAuth();
+
+  const defaultUser = {
+    name: user?.name || "Admin User",
+    email: user?.email || "admin@mcpqos.com",
+    avatar: user?.avatar || "",
+  };
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -171,10 +180,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
-              <a href="#">
+              <Link href="/">
                 <IconInnerShadowTop className="!size-5" />
-                <span className="text-base font-semibold">Acme Inc.</span>
-              </a>
+                <span className="text-base font-semibold">Scanorderly</span>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -185,7 +194,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={defaultUser} />
       </SidebarFooter>
     </Sidebar>
   );

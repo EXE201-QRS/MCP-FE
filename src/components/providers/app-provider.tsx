@@ -4,6 +4,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { create } from "zustand";
 
+import { AuthProvider } from "@/contexts/auth-context";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -28,8 +30,10 @@ export default function AppProvider({
 }) {
   return (
     <QueryClientProvider client={queryClient}>
-      {children}
-      <ReactQueryDevtools initialIsOpen={false} />
+      <AuthProvider>
+        {children}
+        <ReactQueryDevtools initialIsOpen={false} />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
