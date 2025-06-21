@@ -1,28 +1,29 @@
-"use client"
+"use client";
 
-import * as React from "react"
 import {
   IconCamera,
-  IconChartBar,
+  IconCreditCard,
   IconDashboard,
   IconDatabase,
   IconFileAi,
   IconFileDescription,
+  IconFileText,
   IconFileWord,
-  IconFolder,
   IconHelp,
   IconInnerShadowTop,
-  IconListDetails,
   IconReport,
   IconSearch,
   IconSettings,
+  IconStar,
+  IconTarget,
   IconUsers,
-} from "@tabler/icons-react"
+} from "@tabler/icons-react";
+import * as React from "react";
 
-import { NavDocuments } from "@/components/nav-documents"
-import { NavMain } from "@/components/nav-main"
-import { NavSecondary } from "@/components/nav-secondary"
-import { NavUser } from "@/components/nav-user"
+import { NavDocuments } from "@/components/nav-documents";
+import { NavMain } from "@/components/nav-main";
+import { NavSecondary } from "@/components/nav-secondary";
+import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
   SidebarContent,
@@ -31,7 +32,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 
 const data = {
   user: {
@@ -42,28 +43,38 @@ const data = {
   navMain: [
     {
       title: "Dashboard",
-      url: "#",
+      url: "/manage/dashboard",
       icon: IconDashboard,
     },
     {
-      title: "Lifecycle",
-      url: "#",
-      icon: IconListDetails,
-    },
-    {
-      title: "Analytics",
-      url: "#",
-      icon: IconChartBar,
-    },
-    {
-      title: "Projects",
-      url: "#",
-      icon: IconFolder,
-    },
-    {
-      title: "Team",
-      url: "#",
+      title: "Customers", // Quản lý khách hàng
+      url: "/manage/customers",
       icon: IconUsers,
+    },
+    {
+      title: "QOS Instances", // Quản lý QOS instances
+      url: "/manage/qos-instances",
+      icon: IconDatabase,
+    },
+    {
+      title: "Reviews & Ratings", // Quản lý reviews
+      url: "/manage/reviews",
+      icon: IconStar,
+    },
+    {
+      title: "Payments", // Quản lý thanh toán
+      url: "/manage/payments",
+      icon: IconCreditCard,
+    },
+    {
+      title: "Blog & Content", // Quản lý blog
+      url: "/manage/blog",
+      icon: IconFileText,
+    },
+    {
+      title: "Leads", // Quản lý leads
+      url: "/manage/leads",
+      icon: IconTarget,
     },
   ],
   navClouds: [
@@ -148,7 +159,7 @@ const data = {
       icon: IconFileWord,
     },
   ],
-}
+};
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
@@ -177,5 +188,5 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavUser user={data.user} />
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }

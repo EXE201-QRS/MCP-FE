@@ -21,9 +21,11 @@ export const useAppStore = create<AppStoreType>((set, get) => ({
   isAuth: false,
 }));
 
-export default function AppProvider(
-  { children }: { children: React.ReactNode }
-) {
+export default function AppProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <QueryClientProvider client={queryClient}>
       {children}

@@ -1,5 +1,5 @@
 const config = {
-  '*.ts': ['pnpm lint', 'pnpm format']
-}
+  "*.ts": ["eslint --fix"],
+};
 
-export default config
+export default config;
