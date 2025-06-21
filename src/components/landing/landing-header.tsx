@@ -9,11 +9,11 @@ import { ModeToggle } from "@/components/ui/mode-toggle";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 const navigation = [
+  { name: "Sản phẩm", href: "/product" },
   { name: "Tính năng", href: "#features" },
-  { name: "Đánh giá", href: "#testimonials" },
   { name: "Bảng giá", href: "#pricing" },
   { name: "Blog", href: "/blog" },
-  { name: "Liên hệ", href: "#contact" },
+  { name: "Liên hệ", href: "/contact" },
 ];
 
 export function LandingHeader() {

@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { IconArrowRight, IconMail, IconPhone } from "@tabler/icons-react"
+import { IconArrowRight, IconMail, IconPhone } from "@tabler/icons-react";
+import Link from "next/link";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
 export function CTASection() {
   return (
@@ -17,15 +17,15 @@ export function CTASection() {
                 Sẵn sàng bắt đầu với MCP-QOS?
               </h2>
               <p className="mx-auto mb-8 max-w-2xl text-lg opacity-90">
-                Tham gia cùng hàng trăm nhà hàng đã tin dùng MCP-QOS để 
-                quản lý và phát triển kinh doanh của họ.
+                Tham gia cùng hàng trăm nhà hàng đã tin dùng MCP-QOS để quản lý
+                và phát triển kinh doanh của họ.
               </p>
-              
+
               <div className="flex flex-col justify-center gap-4 sm:flex-row">
-                <Button 
-                  size="lg" 
-                  variant="secondary" 
-                  asChild 
+                <Button
+                  size="lg"
+                  variant="secondary"
+                  asChild
                   className="group bg-background text-foreground hover:bg-background/90"
                 >
                   <Link href="/register">
@@ -33,26 +33,24 @@ export function CTASection() {
                     <IconArrowRight className="ml-2 size-4 transition-transform group-hover:translate-x-1" />
                   </Link>
                 </Button>
-                <Button 
-                  size="lg" 
-                  variant="outline" 
+                <Button
+                  size="lg"
+                  variant="outline"
                   asChild
                   className="border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/10"
                 >
-                  <Link href="#contact">
-                    Liên hệ tư vấn
-                  </Link>
+                  <Link href="#contact">Liên hệ tư vấn</Link>
                 </Button>
               </div>
 
               <div className="mt-8 flex flex-col items-center justify-center gap-4 text-sm opacity-75 sm:flex-row">
                 <div className="flex items-center gap-2">
                   <IconMail className="size-4" />
-                  <span>hello@mcpqos.com</span>
+                  <span>scanorderly196@gmail.com</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <IconPhone className="size-4" />
-                  <span>1900 1234</span>
+                  <span>0834564869</span>
                 </div>
               </div>
             </CardContent>
@@ -66,7 +64,7 @@ export function CTASection() {
           </p>
           <div className="flex flex-wrap items-center justify-center gap-8 opacity-60">
             {[1, 2, 3, 4, 5].map((i) => (
-              <div 
+              <div
                 key={i}
                 className="flex h-12 w-24 items-center justify-center rounded-lg bg-muted/50 text-xs font-medium text-muted-foreground"
               >
@@ -77,5 +75,5 @@ export function CTASection() {
         </div>
       </div>
     </section>
-  )
+  );
 }

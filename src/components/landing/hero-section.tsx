@@ -1,16 +1,18 @@
 "use client";
 
-import { IconArrowRight, IconPlayerPlay, IconStar } from "@tabler/icons-react";
+import { IconArrowRight, IconShareplay, IconStar } from "@tabler/icons-react";
 import Image from "next/image";
 import Link from "next/link";
 
+import { DemoDialog } from "@/components/demo/demo-dialog";
+import { VideoDemo } from "@/components/landing/video-demo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 // Import images
-import dashboardImage from "@/assets/dashboard.png";
 import dashboardDarkImage from "@/assets/dashboard-dark.png";
+import dashboardImage from "@/assets/dashboard.png";
 
 export function HeroSection() {
   return (
@@ -47,12 +49,12 @@ export function HeroSection() {
                 <IconArrowRight className="ml-2 size-4 transition-transform group-hover:translate-x-1" />
               </Link>
             </Button>
-            <Button variant="outline" size="lg" asChild className="group">
-              <Link href="https://demo.scanorderly.com" target="_blank">
-                <IconPlayerPlay className="mr-2 size-4" />
+            <DemoDialog>
+              <Button variant="outline" size="lg" className="group">
+                <IconShareplay className="mr-2 size-4" />
                 Xem demo trực tuyến
-              </Link>
-            </Button>
+              </Button>
+            </DemoDialog>
           </div>
 
           {/* Social Proof */}
@@ -80,35 +82,60 @@ export function HeroSection() {
           </div>
         </div>
 
-        {/* Hero Dashboard Preview */}
-        <div className="mx-auto mt-20 max-w-5xl">
-        <Card className="overflow-hidden shadow-2xl">
-        <CardContent className="p-0">
-          <div className="relative aspect-video bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-          {/* Light mode dashboard */}
-        <Image
-        src={dashboardImage}
-        alt="Dashboard quản lý nhà hàng - Thống kê doanh thu, hóa đơn và quản lý đơn hàng"
-        fill
-        className="object-cover dark:hidden"
-        priority
-        />
-        {/* Dark mode dashboard */}
-        <Image
-        src={dashboardDarkImage}
-        alt="Dashboard quản lý nhà hàng - Thống kê doanh thu, hóa đơn và quản lý đơn hàng (Dark Mode)"
-        fill
-        className="object-cover hidden dark:block"
-          priority
-          />
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
-              <p className="bg-black/80 text-white px-4 py-2 rounded-full text-sm font-medium">
-                Dashboard quản lý chuyên nghiệp
+        {/* Hero Video Demo */}
+        <div className="mx-auto mt-20 max-w-5xl space-y-12">
+          {/* Video Demo Section */}
+          <div>
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold mb-2">
+                Xem QOS hoạt động thực tế
+              </h2>
+              <p className="text-muted-foreground">
+                Video demo 3 phút giúp bạn hiểu rõ cách QOS Scanorderly hoạt
+                động
               </p>
+            </div>
+            <VideoDemo />
           </div>
-        </div>
-        </CardContent>
-        </Card>
+
+          {/* Dashboard Preview */}
+          <div>
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold mb-2">
+                Dashboard quản lý chuyên nghiệp
+              </h2>
+              <p className="text-muted-foreground">
+                Giao diện quản lý trực quan và dễ sử dụng
+              </p>
+            </div>
+            <Card className="overflow-hidden shadow-2xl">
+              <CardContent className="p-0">
+                <div className="relative aspect-video bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+                  {/* Light mode dashboard */}
+                  <Image
+                    src={dashboardImage}
+                    alt="Dashboard quản lý nhà hàng - Thống kê doanh thu, hóa đơn và quản lý đơn hàng"
+                    fill
+                    className="object-cover dark:hidden"
+                    priority
+                  />
+                  {/* Dark mode dashboard */}
+                  <Image
+                    src={dashboardDarkImage}
+                    alt="Dashboard quản lý nhà hàng - Thống kê doanh thu, hóa đơn và quản lý đơn hàng (Dark Mode)"
+                    fill
+                    className="object-cover hidden dark:block"
+                    priority
+                  />
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+                    <p className="bg-black/80 text-white px-4 py-2 rounded-full text-sm font-medium">
+                      Dashboard quản lý chuyên nghiệp
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
 

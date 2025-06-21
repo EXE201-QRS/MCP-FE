@@ -1,10 +1,17 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { IconMail, IconPhone, IconMapPin, IconBrandGithub, IconBrandTwitter, IconBrandLinkedin } from "@tabler/icons-react"
+import {
+  IconBrandGithub,
+  IconBrandLinkedin,
+  IconBrandTwitter,
+  IconMail,
+  IconMapPin,
+  IconPhone,
+} from "@tabler/icons-react";
+import Link from "next/link";
 
-import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 
 const footerLinks = {
   product: [
@@ -31,13 +38,13 @@ const footerLinks = {
     { name: "Chính sách cookie", href: "/cookies" },
     { name: "GDPR", href: "/gdpr" },
   ],
-}
+};
 
 const socialLinks = [
   { name: "GitHub", href: "#", icon: IconBrandGithub },
   { name: "Twitter", href: "#", icon: IconBrandTwitter },
   { name: "LinkedIn", href: "#", icon: IconBrandLinkedin },
-]
+];
 
 export function LandingFooter() {
   return (
@@ -65,38 +72,43 @@ export function LandingFooter() {
                 </div>
                 <span className="text-xl font-bold">MCP-QOS</span>
               </Link>
-              
+
               <p className="mt-4 max-w-md text-sm text-muted-foreground">
-                Hệ thống quản lý QR Ordering System chuyên nghiệp, 
-                giúp nhà hàng tối ưu hóa quy trình và tăng doanh thu.
+                Hệ thống quản lý QR Ordering System chuyên nghiệp, giúp nhà hàng
+                tối ưu hóa quy trình và tăng doanh thu.
               </p>
 
               <div className="mt-6 space-y-2">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <IconMail className="size-4" />
-                  <span>hello@mcpqos.com</span>
+                  <span>scanorderly196@gmail.com</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <IconPhone className="size-4" />
-                  <span>1900 1234</span>
+                  <span>0834564869</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <IconMapPin className="size-4" />
-                  <span>Quận 1, TP. Hồ Chí Minh</span>
+                  <span>Thủ Đức, TP. Hồ Chí Minh</span>
                 </div>
               </div>
 
               <div className="mt-6 flex items-center gap-2">
                 {socialLinks.map((social) => {
-                  const IconComponent = social.icon
+                  const IconComponent = social.icon;
                   return (
-                    <Button key={social.name} variant="ghost" size="icon" asChild>
+                    <Button
+                      key={social.name}
+                      variant="ghost"
+                      size="icon"
+                      asChild
+                    >
                       <Link href={social.href}>
                         <IconComponent className="size-4" />
                         <span className="sr-only">{social.name}</span>
                       </Link>
                     </Button>
-                  )
+                  );
                 })}
               </div>
             </div>
@@ -107,7 +119,7 @@ export function LandingFooter() {
               <ul className="space-y-2">
                 {footerLinks.product.map((link) => (
                   <li key={link.name}>
-                    <Link 
+                    <Link
                       href={link.href}
                       className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                     >
@@ -123,7 +135,7 @@ export function LandingFooter() {
               <ul className="space-y-2">
                 {footerLinks.support.map((link) => (
                   <li key={link.name}>
-                    <Link 
+                    <Link
                       href={link.href}
                       className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                     >
@@ -139,7 +151,7 @@ export function LandingFooter() {
               <ul className="space-y-2 mb-6">
                 {footerLinks.company.map((link) => (
                   <li key={link.name}>
-                    <Link 
+                    <Link
                       href={link.href}
                       className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                     >
@@ -153,7 +165,7 @@ export function LandingFooter() {
               <ul className="space-y-2">
                 {footerLinks.legal.map((link) => (
                   <li key={link.name}>
-                    <Link 
+                    <Link
                       href={link.href}
                       className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                     >
@@ -180,5 +192,5 @@ export function LandingFooter() {
         </div>
       </div>
     </footer>
-  )
+  );
 }
