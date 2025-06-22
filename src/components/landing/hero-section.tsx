@@ -36,9 +36,9 @@ export function HeroSection() {
 
           {/* Subheadline */}
           <p className="mx-auto mb-10 max-w-2xl text-lg leading-8 text-muted-foreground">
-            MCP-QOS giúp bạn quản lý tập trung tất cả hệ thống QR Ordering của
-            khách hàng. Theo dõi doanh thu, quản lý đánh giá và tối ưu hóa hiệu
-            suất kinh doanh.
+            Scanorderly giúp bạn quản lý tập trung tất cả hệ thống QR Ordering
+            của khách hàng. Theo dõi doanh thu, quản lý đánh giá và tối ưu hóa
+            hiệu suất kinh doanh.
           </p>
 
           {/* CTA Buttons */}

@@ -14,11 +14,11 @@ export function CTASection() {
           <Card className="overflow-hidden border-0 bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-2xl">
             <CardContent className="p-12 text-center">
               <h2 className="mb-6 text-3xl font-bold sm:text-4xl">
-                Sẵn sàng bắt đầu với MCP-QOS?
+                Sẵn sàng bắt đầu với Scanorderly?
               </h2>
               <p className="mx-auto mb-8 max-w-2xl text-lg opacity-90">
-                Tham gia cùng hàng trăm nhà hàng đã tin dùng MCP-QOS để quản lý
-                và phát triển kinh doanh của họ.
+                Tham gia cùng hàng trăm nhà hàng đã tin dùng Scanorderly để quản
+                lý và phát triển kinh doanh của họ.
               </p>
 
               <div className="flex flex-col justify-center gap-4 sm:flex-row">
