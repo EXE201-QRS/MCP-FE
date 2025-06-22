@@ -33,6 +33,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { useAuthStore } from "@/stores/auth.store";
+import Link from "next/link";
 
 const data = {
   user: {
@@ -47,27 +49,27 @@ const data = {
       icon: IconDashboard,
     },
     {
-      title: "Customers", // Quản lý khách hàng
+      title: "Quản lý khách hàng", // Quản lý khách hàng
       url: "/manage/customers",
       icon: IconUsers,
     },
     {
-      title: "QOS Instances", // Quản lý QOS instances
+      title: "Quản lý QOS instances", // Quản lý QOS instances
       url: "/manage/qos-instances",
       icon: IconDatabase,
     },
     {
-      title: "Reviews & Ratings", // Quản lý reviews
+      title: "Quản lý reviews", // Quản lý reviews
       url: "/manage/reviews",
       icon: IconStar,
     },
     {
-      title: "Payments", // Quản lý thanh toán
+      title: "Quản lý thanh toán", // Quản lý thanh toán
       url: "/manage/payments",
       icon: IconCreditCard,
     },
     {
-      title: "Blog & Content", // Quản lý blog
+      title: "Quản lý blog", // Quản lý blog
       url: "/manage/blog",
       icon: IconFileText,
     },
@@ -162,6 +164,13 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { user } = useAuthStore();
+
+  const defaultUser = {
+    name: user?.name || "Admin User",
+    email: user?.email || "admin@mcpqos.com",
+    avatar: user?.avatar || "",
+  };
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -171,10 +180,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
-              <a href="#">
+              <Link href="/manage/dashboard">
                 <IconInnerShadowTop className="!size-5" />
-                <span className="text-base font-semibold">Acme Inc.</span>
-              </a>
+                <span className="text-base font-semibold">Scanorderly</span>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -185,7 +194,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={defaultUser} />
       </SidebarFooter>
     </Sidebar>
   );
