@@ -15,10 +15,10 @@ import { Separator } from "@/components/ui/separator";
 
 const footerLinks = {
   product: [
-    { name: "Tính năng", href: "#features" },
-    { name: "Bảng giá", href: "#pricing" },
-    { name: "Đánh giá", href: "#testimonials" },
-    { name: "Demo", href: "#demo" },
+    { name: "Tính năng", href: "/#features" },
+    { name: "Bảng giá", href: "/#pricing" },
+    { name: "Đánh giá", href: "/testimonials" },
+    { name: "Demo", href: "/demo" },
   ],
   support: [
     { name: "Trung tâm hỗ trợ", href: "/support" },
@@ -70,7 +70,7 @@ export function LandingFooter() {
                     <path d="m2 12 10 5 10-5" />
                   </svg>
                 </div>
-                <span className="text-xl font-bold">MCP-QOS</span>
+                <span className="text-xl font-bold">Scanorderly</span>
               </Link>
 
               <p className="mt-4 max-w-md text-sm text-muted-foreground">

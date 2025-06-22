@@ -1,6 +1,7 @@
 import http from "@/lib/http";
 import {
   ForgotPasswordBodyType,
+  GetAccountProfileResType,
   LoginBodyType,
   LoginResType,
   RegisterBodyType,
@@ -14,7 +15,8 @@ const authApiRequest = {
     http.post<LoginResType>("/api/auth/login", body, {
       baseUrl: "",
     }),
-  sRegister: (body: RegisterBodyType) => http.post<RegisterResType>("/auth/register", body),
+  sRegister: (body: RegisterBodyType) =>
+    http.post<RegisterResType>("/auth/register", body),
   register: (body: RegisterBodyType) =>
     http.post<RegisterResType>("/api/auth/register", body, {
       baseUrl: "",
@@ -22,6 +24,14 @@ const authApiRequest = {
   sendOTP: (body: SendOTPBodyType) => http.post(`auth/otp`, body),
   forgotPassword: (body: ForgotPasswordBodyType) =>
     http.post(`auth/forgot-password`, body),
+  //me
+  me: () => http.get<GetAccountProfileResType>("/api/auth/me", { baseUrl: "" }),
+  sMe: (sessionToken: string) =>
+    http.get<GetAccountProfileResType>("/auth/me", {
+      headers: {
+        Authorization: `Bearer ${sessionToken}`,
+      },
+    }),
 };
 
 export default authApiRequest;

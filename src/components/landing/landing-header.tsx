@@ -10,8 +10,8 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 const navigation = [
   { name: "Sản phẩm", href: "/product" },
-  { name: "Tính năng", href: "#features" },
-  { name: "Bảng giá", href: "#pricing" },
+  { name: "Tính năng", href: "/#features" },
+  { name: "Bảng giá", href: "/#pricing" },
   { name: "Blog", href: "/blog" },
   { name: "Liên hệ", href: "/contact" },
 ];

@@ -119,7 +119,21 @@ export function RegisterForm() {
     try {
       const response = await registerMutation.mutateAsync(data);
       toast.success(response.payload.message || "Đăng ký thành công!");
-      router.push("/manage/dashboard");
+      
+      // Redirect based on user role from response or token
+      const token = response.payload.data.sessionToken;
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload.roleName === 'ADMIN_SYSTEM') {
+          router.push("/manage/dashboard");
+        } else {
+          router.push("/customer/dashboard");
+        }
+      } catch {
+        // Fallback to customer dashboard
+        router.push("/customer/dashboard");
+      }
+      
       router.refresh();
     } catch (error) {
       handleErrorApi({
