@@ -1,6 +1,6 @@
 "use client"
 
-import { useAuth } from "@/contexts/auth-context"
+import { useAuthStore } from "@/stores/auth.store"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SiteHeader } from "@/components/site-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
@@ -10,7 +10,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { isLoading } = useAuth()
+  const { isLoading } = useAuthStore()
 
   if (isLoading) {
     return (

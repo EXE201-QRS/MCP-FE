@@ -7,6 +7,7 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/ui/mode-toggle";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useAuthStore } from "@/stores/auth.store";
 
 const navigation = [
   { name: "Sản phẩm", href: "/product" },
@@ -18,7 +19,7 @@ const navigation = [
 
 export function LandingHeader() {
   const [isOpen, setIsOpen] = React.useState(false);
-
+  const { isAuthenticated, user } = useAuthStore();
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -62,12 +63,28 @@ export function LandingHeader() {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex md:items-center md:space-x-4">
-            <Button variant="ghost" asChild>
-              <Link href="/login">Đăng nhập</Link>
-            </Button>
-            <Button asChild>
-              <Link href="/register">Bắt đầu ngay</Link>
-            </Button>
+            {!isAuthenticated ? (
+              <>
+                <Button variant="ghost" asChild>
+                  <Link href="/login">Đăng nhập</Link>
+                </Button>
+                <Button asChild>
+                  <Link href="/register">Bắt đầu ngay</Link>
+                </Button>
+              </>
+            ) : (
+              <>
+                {user?.roleName === "CUSTOMER" ? (
+                  <Button variant="ghost" asChild>
+                    <Link href="/customer/dashboard">Bảng điều khiển</Link>
+                  </Button>
+                ) : (
+                  <Button variant="ghost" asChild>
+                    <Link href="/manage/dashboard">Bảng điều khiển</Link>
+                  </Button>
+                )}
+              </>
+            )}
             <ModeToggle />
           </div>
 

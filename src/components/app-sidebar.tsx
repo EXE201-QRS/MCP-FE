@@ -33,7 +33,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { useAuth } from "@/contexts/auth-context";
+import { useAuthStore } from "@/stores/auth.store";
 import Link from "next/link";
 
 const data = {
@@ -49,27 +49,27 @@ const data = {
       icon: IconDashboard,
     },
     {
-      title: "Customers", // Quản lý khách hàng
+      title: "Quản lý khách hàng", // Quản lý khách hàng
       url: "/manage/customers",
       icon: IconUsers,
     },
     {
-      title: "QOS Instances", // Quản lý QOS instances
+      title: "Quản lý QOS instances", // Quản lý QOS instances
       url: "/manage/qos-instances",
       icon: IconDatabase,
     },
     {
-      title: "Reviews & Ratings", // Quản lý reviews
+      title: "Quản lý reviews", // Quản lý reviews
       url: "/manage/reviews",
       icon: IconStar,
     },
     {
-      title: "Payments", // Quản lý thanh toán
+      title: "Quản lý thanh toán", // Quản lý thanh toán
       url: "/manage/payments",
       icon: IconCreditCard,
     },
     {
-      title: "Blog & Content", // Quản lý blog
+      title: "Quản lý blog", // Quản lý blog
       url: "/manage/blog",
       icon: IconFileText,
     },
@@ -164,7 +164,7 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { user } = useAuth();
+  const { user } = useAuthStore();
 
   const defaultUser = {
     name: user?.name || "Admin User",
@@ -180,7 +180,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
-              <Link href="/">
+              <Link href="/manage/dashboard">
                 <IconInnerShadowTop className="!size-5" />
                 <span className="text-base font-semibold">Scanorderly</span>
               </Link>

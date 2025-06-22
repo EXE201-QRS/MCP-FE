@@ -1,6 +1,6 @@
 "use client"
 
-import { useAuth } from "@/contexts/auth-context"
+import { useAuthStore } from "@/stores/auth.store"
 import { CustomerSidebar } from "@/components/customer/customer-sidebar"
 import { CustomerHeader } from "@/components/customer/customer-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
@@ -10,7 +10,7 @@ export default function CustomerLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { isLoading } = useAuth()
+  const { isLoading } = useAuthStore()
 
   if (isLoading) {
     return (

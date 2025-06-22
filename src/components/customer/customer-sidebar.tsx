@@ -26,7 +26,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { useAuth } from "@/contexts/auth-context";
+import { useAuthStore } from "@/stores/auth.store";
 import Link from "next/link";
 
 const customerNavigation = {
@@ -84,7 +84,7 @@ const customerNavigation = {
 export function CustomerSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
-  const { user } = useAuth();
+  const { user } = useAuthStore();
 
   const defaultUser = {
     name: user?.name || "Customer User",
