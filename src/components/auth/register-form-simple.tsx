@@ -21,7 +21,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { TypeOfVerificationCode } from "@/constants/auth.constant";
 import { useRegisterMutation, useSendOTPMutation } from "@/hooks/useAuth";
-import { handleErrorApi } from "@/lib/utils";
+import { handleErrorApi, setSessionTokenToLocalStorage } from "@/lib/utils";
 import {
   RegisterBodyType,
   SendOTPBodyType,
@@ -120,8 +120,13 @@ export function RegisterForm() {
       const response = await registerMutation.mutateAsync(data);
       toast.success(response.payload.message || "Đăng ký thành công!");
       
-      // Always redirect customer to dashboard after register
+      // Store token to localStorage (FIX: This was missing!)
       const token = response.payload.data.sessionToken;
+      if (token) {
+        setSessionTokenToLocalStorage(token);
+      }
+      
+      // Always redirect customer to dashboard after register
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         if (payload.roleName === 'ADMIN_SYSTEM') {
