@@ -23,7 +23,10 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { useCreatePayOSPaymentMutation } from "@/hooks/usePayment";
 import { useGetServicePlan } from "@/hooks/useServicePlan";
-import { useAddSubscriptionMutation, useGetSubscriptionList } from "@/hooks/useSubscription";
+import {
+  useAddSubscriptionMutation,
+  useGetSubscriptionList,
+} from "@/hooks/useSubscription";
 import { handleErrorApi } from "@/lib/utils";
 import {
   CreateSubscriptionBodyType,
@@ -61,7 +64,7 @@ export default function CheckoutPage() {
 
   const [selectedDuration, setSelectedDuration] = useState<string>("ONE_MONTH");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // Check if user already has pending subscription for this plan
   const { data: subscriptionsData } = useGetSubscriptionList({
     page: 1,
@@ -121,14 +124,36 @@ export default function CheckoutPage() {
     const duration = DurationOptions.find((d) => d.value === selectedDuration);
     return planData.payload.data.price * (duration?.months || 1);
   };
-  
+
   // Check if user has pending subscription for this plan
   const hasPendingSubscription = subscriptionsData?.payload?.data?.some(
     (sub) => sub.servicePlanId === Number(planId) && sub.status === "PENDING"
   );
 
+  // JWT validation helper
+  const isJWTValid = (): boolean => {
+    if (typeof window === 'undefined') return false;
+    const token = localStorage.getItem('sessionToken');
+    if (!token) return false;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return Date.now() < payload.exp * 1000 && !!payload.userId;
+    } catch {
+      return false;
+    }
+  };
+
   const onSubmit = async (data: CheckoutFormData) => {
     if (isSubmitting) return;
+
+    // Validate JWT token
+    const isTokenValid = isJWTValid();
+    if (!isTokenValid) {
+      toast.error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.");
+      const returnUrl = `/checkout?planId=${planId}`;
+      window.location.href = `/login?returnUrl=${encodeURIComponent(returnUrl)}`;
+      return;
+    }
 
     // Validation
     if (!data.restaurantName.trim()) {
@@ -157,35 +182,50 @@ export default function CheckoutPage() {
     setIsSubmitting(true);
 
     try {
-      // Step 1: Create subscription
+      // Create subscription
       const subscriptionPayload: CreateSubscriptionBodyType = {
         ...data,
         durationDays: selectedDuration as any,
         description: data.description?.trim() || null,
       };
 
+      // Add userId from auth store as fallback if backend doesn't extract from JWT
+      if (user?.id) {
+        (subscriptionPayload as any).userId = user.id;
+      }
+
       const subscriptionResponse =
-        await addSubscriptionMutation.mutateAsync(subscriptionPayload);
+      await addSubscriptionMutation.mutateAsync(subscriptionPayload);
       const subscriptionId = subscriptionResponse.payload.data.id;
 
-      // Step 2: Create PayOS payment
+      // Create PayOS payment
       const paymentPayload = {
-        subscriptionId,
-        amount: calculateTotal(),
-        description: `Thanh toán gói ${planData?.payload.data.name} - ${data.restaurantName}`,
+      subscriptionId,
+      buyerName: user?.name || '',
+      buyerEmail: user?.email || '',
+      buyerPhone: data.restaurantPhone || '',
       };
 
       const paymentResponse =
-        await createPaymentMutation.mutateAsync(paymentPayload);
-      const checkoutUrl = paymentResponse.payload.data.checkoutUrl;
+      await createPaymentMutation.mutateAsync(paymentPayload);
+      const checkoutUrl = paymentResponse.payload.data.payosData.checkoutUrl;
 
-      // Step 3: Redirect to PayOS
+      // Redirect to PayOS
       if (checkoutUrl) {
-        window.location.href = checkoutUrl;
+      window.location.href = checkoutUrl;
       } else {
-        toast.error("Không thể tạo link thanh toán. Vui lòng thử lại.");
+      toast.error("Không thể tạo link thanh toán. Vui lòng thử lại.");
       }
     } catch (error) {
+      // Check if it's a userId validation error
+      if (error instanceof Error && error.message.includes("userId")) {
+        toast.error("Lỗi xác thực người dùng. Vui lòng đăng nhập lại.");
+        // Redirect to login with return URL
+        const returnUrl = `/checkout?planId=${planId}`;
+        window.location.href = `/login?returnUrl=${encodeURIComponent(returnUrl)}`;
+        return;
+      }
+
       handleErrorApi({
         error,
         setError: form.setError,
@@ -280,7 +320,7 @@ export default function CheckoutPage() {
                 </p>
               </div>
             </div>
-            
+
             {/* Theme Toggle */}
             <ModeToggle />
           </div>
@@ -301,18 +341,17 @@ export default function CheckoutPage() {
                     Bạn đã có đăng ký chờ thanh toán cho gói này
                   </h3>
                   <p className="text-yellow-700 dark:text-yellow-300 text-sm mb-3">
-                    Hệ thống đã ghi nhận đăng ký trước đó của bạn cho gói này. Bạn có thể thanh toán ngay hoặc tạo đăng ký mới.
+                    Hệ thống đã ghi nhận đăng ký trước đó của bạn cho gói này.
+                    Bạn có thể thanh toán ngay hoặc tạo đăng ký mới.
                   </p>
                   <Button variant="outline" size="sm" asChild>
-                    <Link href="/customer/dashboard">
-                      Xem đăng ký hiện tại
-                    </Link>
+                    <Link href="/customer/dashboard">Xem đăng ký hiện tại</Link>
                   </Button>
                 </div>
               </div>
             </div>
           )}
-          
+
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Restaurant Information Form */}

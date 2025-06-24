@@ -37,17 +37,31 @@ export const PaymentSchema = z
 export const CreatePayOSPaymentBodySchema = z
   .object({
     subscriptionId: z.number().int().positive(),
-    amount: z.number().min(0),
-    description: z.string().optional(),
+    buyerName: z.string().max(255).optional(),
+    buyerEmail: z.string().email().optional(),
+    buyerPhone: z.string().max(20).optional(),
+    buyerAddress: z.string().max(500).optional(),
   })
   .strict();
 
 export const CreatePayOSPaymentResSchema = z.object({
   data: z.object({
-    paymentId: z.number(),
-    checkoutUrl: z.string(),
-    qrCode: z.string().optional(),
-    orderCode: z.string(),
+    payment: z.object({
+      id: z.number(),
+      subscriptionId: z.number(),
+      amount: z.number(),
+      status: z.string(),
+      payosOrderId: z.string(),
+      payosCheckoutUrl: z.string(),
+    }),
+    payosData: z.object({
+      orderCode: z.number(),
+      checkoutUrl: z.string(),
+      qrCode: z.string().optional(),
+      paymentLinkId: z.string(),
+      expiredAt: z.number(),
+      amount: z.number(),
+    }),
   }),
   message: z.string(),
 });
