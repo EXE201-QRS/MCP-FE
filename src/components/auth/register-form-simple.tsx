@@ -120,19 +120,19 @@ export function RegisterForm() {
       const response = await registerMutation.mutateAsync(data);
       toast.success(response.payload.message || "Đăng ký thành công!");
       
-      // Redirect based on user role from response or token
+      // Always redirect customer to dashboard after register
       const token = response.payload.data.sessionToken;
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         if (payload.roleName === 'ADMIN_SYSTEM') {
           router.push("/manage/dashboard");
         } else {
-          // Redirect customer to plans selection page
-          router.push("/plans?from=register");
+          // Customer always goes to dashboard
+          router.push("/customer/dashboard");
         }
       } catch {
-        // Fallback to plans page for customers
-        router.push("/plans?from=register");
+        // Fallback to customer dashboard
+        router.push("/customer/dashboard");
       }
       
       router.refresh();

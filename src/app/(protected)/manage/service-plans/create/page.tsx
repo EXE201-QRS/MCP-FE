@@ -158,7 +158,9 @@ export default function CreateServicePlanPage() {
                   {...form.register("price", { valueAsNumber: true })}
                 />
                 <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                  <span className="text-sm text-muted-foreground">VND/tháng</span>
+                  <span className="text-sm text-muted-foreground">
+                    VND/tháng
+                  </span>
                 </div>
               </div>
               {form.formState.errors.price && (
@@ -177,24 +179,18 @@ export default function CreateServicePlanPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
                 <div className="space-y-1">
                   <div className="font-medium">Basic</div>
-                  <div className="text-muted-foreground">299,000 VND/tháng</div>
-                  <div className="text-muted-foreground">
-                    Phù hợp quán nhỏ
-                  </div>
+                  <div className="text-muted-foreground">199,000 VND/tháng</div>
+                  <div className="text-muted-foreground">Phù hợp quán nhỏ</div>
                 </div>
                 <div className="space-y-1">
                   <div className="font-medium">Professional</div>
-                  <div className="text-muted-foreground">599,000 VND/tháng</div>
-                  <div className="text-muted-foreground">
-                    Cho nhà hàng vừa
-                  </div>
+                  <div className="text-muted-foreground">399,000 VND/tháng</div>
+                  <div className="text-muted-foreground">Cho nhà hàng vừa</div>
                 </div>
                 <div className="space-y-1">
                   <div className="font-medium">Enterprise</div>
-                  <div className="text-muted-foreground">1,299,000 VND/tháng</div>
-                  <div className="text-muted-foreground">
-                    Chuỗi nhà hàng
-                  </div>
+                  <div className="text-muted-foreground">799,000 VND/tháng</div>
+                  <div className="text-muted-foreground">Chuỗi nhà hàng</div>
                 </div>
               </div>
             </div>

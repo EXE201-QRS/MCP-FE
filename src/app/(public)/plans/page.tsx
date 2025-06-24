@@ -9,23 +9,33 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { ModeToggle } from "@/components/ui/mode-toggle";
 import { useGetServicePlanList } from "@/hooks/useServicePlan";
+import { useGetSubscriptionList } from "@/hooks/useSubscription";
+import { useAuthStore } from "@/stores/auth.store";
 import {
   IconCheck,
+  IconCreditCard,
   IconCrown,
   IconPackages,
   IconStar,
+  IconUser,
+  IconUserPlus,
 } from "@tabler/icons-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 
 export default function PlansPage() {
-  const searchParams = useSearchParams();
-  const fromRegister = searchParams.get("from") === "register";
+  const { isAuthenticated } = useAuthStore();
 
   const { data, isLoading, error } = useGetServicePlanList({
     page: 1,
     limit: 10,
+  });
+
+  // Get user's subscriptions to check for pending ones
+  const { data: subscriptionsData } = useGetSubscriptionList({
+    page: 1,
+    limit: 100,
   });
 
   const formatCurrency = (amount: number) => {
@@ -36,7 +46,7 @@ export default function PlansPage() {
   };
 
   const getRecommendedPlan = () => {
-    if (!data?.payload.data || data.payload.data.length === 0) return null;
+    if (!data?.payload?.data || data.payload.data.length === 0) return null;
     // Recommend middle plan if 3 plans, or second plan if more
     const middleIndex = Math.floor(data.payload.data.length / 2);
     return data.payload.data[middleIndex]?.id;
@@ -82,6 +92,13 @@ export default function PlansPage() {
     }
   };
 
+  // Check if user has pending subscription for a specific plan
+  const hasPendingSubscription = (planId: number) => {
+    return subscriptionsData?.payload?.data?.some(
+      (sub) => sub.servicePlanId === planId && sub.status === "PENDING"
+    );
+  };
+
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
@@ -102,46 +119,117 @@ export default function PlansPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center gap-4">
-            <div className="p-2 bg-primary/10 rounded-lg">
-              <IconPackages className="size-6 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                Chọn gói dịch vụ phù hợp
-              </h1>
-              <p className="text-gray-600">
-                Bắt đầu hành trình số hóa nhà hàng của bạn
-              </p>
-            </div>
+  <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+  {/* Header */}
+  <div className="bg-white dark:bg-gray-900 shadow-sm border-b dark:border-gray-700">
+  <div className="container mx-auto px-4 py-6">
+  <div className="flex items-center justify-between">
+  <div className="flex items-center gap-4">
+  <div className="p-2 bg-primary/10 dark:bg-primary/20 rounded-lg">
+  <IconPackages className="size-6 text-primary" />
+  </div>
+  <div>
+  <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+  Gói dịch vụ QR Ordering
+  </h1>
+  <p className="text-gray-600 dark:text-gray-300">
+  Chọn gói phù hợp để bắt đầu số hóa nhà hàng
+  </p>
+  </div>
+  </div>
+  
+  {/* Auth Actions & Theme Toggle */}
+  <div className="flex items-center gap-3">
+  <ModeToggle />
+  {!isAuthenticated && (
+  <>
+  <Button variant="outline" asChild>
+  <Link href="/login">
+      <IconUser className="size-4 mr-2" />
+        Đăng nhập
+      </Link>
+  </Button>
+  <Button asChild>
+  <Link href="/register">
+      <IconUserPlus className="size-4 mr-2" />
+        Đăng ký
+        </Link>
+        </Button>
+        </>
+        )}
+        </div>
           </div>
         </div>
       </div>
 
       <div className="container mx-auto px-4 py-12">
-        {/* Welcome Message for New Users */}
-        {fromRegister && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-8">
+        {/* Auth Required Message */}
+        {!isAuthenticated && (
+          <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-6 mb-8">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-full">
-                <IconCheck className="size-5 text-green-600" />
+              <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-full">
+                <IconUser className="size-5 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <h3 className="font-semibold text-green-800">
-                  Đăng ký thành công! 🎉
+                <h3 className="font-semibold text-blue-800 dark:text-blue-200">
+                  Đăng nhập để xem và đăng ký gói dịch vụ
                 </h3>
-                <p className="text-green-700">
-                  Bây giờ hãy chọn gói dịch vụ phù hợp để bắt đầu sử dụng hệ
-                  thống QR Ordering.
+                <p className="text-blue-700 dark:text-blue-300 mb-3">
+                  Bạn cần có tài khoản để có thể đăng ký sử dụng dịch vụ QR
+                  Ordering
                 </p>
+                <div className="flex gap-3">
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href="/login">
+                      <IconUser className="size-4 mr-2" />
+                      Đăng nhập
+                    </Link>
+                  </Button>
+                  <Button size="sm" asChild>
+                    <Link href="/register">
+                      <IconUserPlus className="size-4 mr-2" />
+                      Tạo tài khoản mới
+                    </Link>
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
         )}
+
+        {/* Pending Subscriptions Alert */}
+        {isAuthenticated &&
+          subscriptionsData?.payload?.data?.some(
+            (sub) => sub.status === "PENDING"
+          ) && (
+            <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg p-6 mb-8">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-amber-100 dark:bg-amber-900 rounded-full">
+                  <IconPackages className="size-5 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-amber-800 dark:text-amber-200">
+                    Bạn có{" "}
+                    {
+                      subscriptionsData?.payload?.data?.filter(
+                        (sub) => sub.status === "PENDING"
+                      ).length
+                    }{" "}
+                    đăng ký chờ thanh toán
+                  </h3>
+                  <p className="text-amber-700 dark:text-amber-300 mb-3">
+                    Hoàn tất thanh toán để kích hoạt các gói dịch vụ đã đăng ký
+                  </p>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href="/customer/dashboard">
+                      <IconCreditCard className="size-4 mr-2" />
+                      Xem và thanh toán
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
 
         {/* Loading State */}
         {isLoading ? (
@@ -194,10 +282,10 @@ export default function PlansPage() {
                 return (
                   <Card
                     key={plan.id}
-                    className={`relative transition-all duration-300 hover:scale-105 hover:shadow-lg ${
+                    className={`relative transition-all duration-300 hover:scale-105 hover:shadow-lg dark:hover:shadow-xl ${
                       isRecommended
                         ? "ring-2 ring-primary shadow-lg scale-105"
-                        : "hover:ring-1 hover:ring-gray-200"
+                        : "hover:ring-1 hover:ring-gray-200 dark:hover:ring-gray-600"
                     }`}
                   >
                     {/* Recommended Badge */}
@@ -232,10 +320,10 @@ export default function PlansPage() {
                       <div className="space-y-3">
                         {features.map((feature, index) => (
                           <div key={index} className="flex items-center gap-3">
-                            <div className="p-1 bg-green-100 rounded-full">
-                              <IconCheck className="size-3 text-green-600" />
+                            <div className="p-1 bg-green-100 dark:bg-green-900/50 rounded-full">
+                              <IconCheck className="size-3 text-green-600 dark:text-green-400" />
                             </div>
-                            <span className="text-sm text-gray-700">
+                            <span className="text-sm text-gray-700 dark:text-gray-300">
                               {feature}
                             </span>
                           </div>
@@ -243,17 +331,51 @@ export default function PlansPage() {
                       </div>
 
                       {/* CTA Button */}
-                      <Button
-                        asChild
-                        className={`w-full mt-6 ${
-                          isRecommended ? "bg-primary hover:bg-primary/90" : ""
-                        }`}
-                        variant={isRecommended ? "default" : "outline"}
-                      >
-                        <Link href={`/checkout?planId=${plan.id}`}>
-                          {isRecommended ? "Chọn gói này" : "Chọn gói"}
-                        </Link>
-                      </Button>
+                      {isAuthenticated ? (
+                        hasPendingSubscription(plan.id) ? (
+                          <div className="space-y-2 mt-6">
+                            <Badge
+                              variant="secondary"
+                              className="w-full justify-center py-2"
+                            >
+                              Đã đăng ký - Chờ thanh toán
+                            </Badge>
+                            <Button
+                              asChild
+                              variant="outline"
+                              size="sm"
+                              className="w-full"
+                            >
+                              <Link href="/customer/dashboard">
+                                Xem chi tiết
+                              </Link>
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button
+                            asChild
+                            className={`w-full mt-6 ${
+                              isRecommended
+                                ? "bg-primary hover:bg-primary/90"
+                                : ""
+                            }`}
+                            variant={isRecommended ? "default" : "outline"}
+                          >
+                            <Link href={`/checkout?planId=${plan.id}`}>
+                              Chọn gói này
+                            </Link>
+                          </Button>
+                        )
+                      ) : (
+                        <Button
+                          asChild
+                          className="w-full mt-6"
+                          variant="outline"
+                          disabled
+                        >
+                          <span>Đăng nhập để chọn gói</span>
+                        </Button>
+                      )}
                     </CardContent>
                   </Card>
                 );
@@ -261,13 +383,13 @@ export default function PlansPage() {
             </div>
 
             {/* Trust Indicators */}
-            <div className="bg-white rounded-lg p-8 shadow-sm">
+            <div className="bg-white dark:bg-gray-900 rounded-lg p-8 shadow-sm">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
                 <div>
                   <div className="text-2xl font-bold text-primary mb-2">
                     500+
                   </div>
-                  <div className="text-gray-600">Nhà hàng tin tùng</div>
+                  <div className="text-gray-600 dark:text-gray-300">Nhà hàng tin tùng</div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-primary mb-2">
@@ -276,20 +398,20 @@ export default function PlansPage() {
                       <IconStar className="size-5 text-yellow-500 fill-current" />
                     </div>
                   </div>
-                  <div className="text-gray-600">Đánh giá từ khách hàng</div>
+                  <div className="text-gray-600 dark:text-gray-300">Đánh giá từ khách hàng</div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-primary mb-2">
                     24/7
                   </div>
-                  <div className="text-gray-600">Hỗ trợ khách hàng</div>
+                  <div className="text-gray-600 dark:text-gray-300">Hỗ trợ khách hàng</div>
                 </div>
               </div>
             </div>
 
             {/* Help Section */}
             <div className="text-center mt-8">
-              <p className="text-gray-600 mb-4">
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
                 Cần tư vấn thêm? Chúng tôi sẵn sàng hỗ trợ bạn.
               </p>
               <div className="flex gap-4 justify-center">
