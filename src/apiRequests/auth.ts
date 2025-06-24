@@ -7,6 +7,8 @@ import {
   RegisterBodyType,
   RegisterResType,
   SendOTPBodyType,
+  UpdateProfileBodyType,
+  UpdateProfileResType,
 } from "@/schemaValidations/auth.model";
 
 const authApiRequest = {
@@ -32,6 +34,13 @@ const authApiRequest = {
         Authorization: `Bearer ${sessionToken}`,
       },
     }),
+  // Update profile
+  updateProfile: (body: UpdateProfileBodyType) =>
+    http.put<UpdateProfileResType>("/api/auth/profile", body, {
+      baseUrl: "",
+    }),
+  sUpdateProfile: (body: UpdateProfileBodyType) =>
+    http.put<UpdateProfileResType>("/auth/profile", body),
 };
 
 export default authApiRequest;

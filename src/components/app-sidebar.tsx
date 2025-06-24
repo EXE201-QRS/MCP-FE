@@ -55,6 +55,16 @@ const data = {
       icon: IconPackages,
     },
     {
+      title: "Quản lý đăng ký", // Subscriptions Management
+      url: "/manage/subscriptions",
+      icon: IconUsers,
+    },
+    {
+      title: "Quản lý thanh toán", // Payments Management
+      url: "/manage/payments",
+      icon: IconCreditCard,
+    },
+    {
       title: "Quản lý khách hàng", // Quản lý khách hàng
       url: "/manage/customers",
       icon: IconUsers,
@@ -69,11 +79,7 @@ const data = {
       url: "/manage/reviews",
       icon: IconStar,
     },
-    {
-      title: "Quản lý thanh toán", // Quản lý thanh toán
-      url: "/manage/payments",
-      icon: IconCreditCard,
-    },
+
     {
       title: "Quản lý blog", // Quản lý blog
       url: "/manage/blog",
