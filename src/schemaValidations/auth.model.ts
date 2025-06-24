@@ -2,6 +2,24 @@ import { TypeOfVerificationCode } from "@/constants/auth.constant";
 import { UserSchema } from "@/schemaValidations/user.model";
 import { z } from "zod";
 
+export const UpdateProfileBodySchema = z
+  .object({
+    name: z.string().min(1, "Họ và tên là bắt buộc").max(100, "Họ và tên không được quá 100 ký tự"),
+    phoneNumber: z.string().min(9, "Số điện thoại phải có ít nhất 9 số").max(15, "Số điện thoại không được quá 15 số"),
+  })
+  .strict();
+
+export const UpdateProfileResSchema = z.object({
+  data: UserSchema.pick({
+    id: true,
+    email: true,
+    name: true,
+    phoneNumber: true,
+    avatar: true,
+  }),
+  message: z.string(),
+});
+
 export const LoginBodySchema = UserSchema.pick({
   email: true,
   password: true,
@@ -81,3 +99,5 @@ export type ForgotPasswordBodyType = z.infer<typeof ForgotPasswordBodySchema>;
 export type GetAccountProfileResType = z.infer<
   typeof GetAccountProfileResSchema
 >;
+export type UpdateProfileBodyType = z.infer<typeof UpdateProfileBodySchema>;
+export type UpdateProfileResType = z.infer<typeof UpdateProfileResSchema>;

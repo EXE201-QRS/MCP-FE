@@ -27,6 +27,7 @@ import {
   useAddSubscriptionMutation,
   useGetSubscriptionList,
 } from "@/hooks/useSubscription";
+import { useUpdateProfileMutation } from "@/hooks/useAuth";
 import { handleErrorApi } from "@/lib/utils";
 import {
   CreateSubscriptionBodyType,
@@ -39,6 +40,7 @@ import {
   IconBuildingStore,
   IconCheck,
   IconCreditCard,
+  IconEdit,
   IconLoader2,
   IconMapPin,
   IconPackages,
@@ -46,6 +48,7 @@ import {
   IconShield,
   IconShoppingCart,
   IconUser,
+  IconMail,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -53,7 +56,20 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-interface CheckoutFormData extends CreateSubscriptionBodyType {}
+// Extended form data to include user profile updates
+interface CheckoutFormData {
+  // User profile fields (separate from subscription)
+  userName: string;
+  userPhone: string;
+  // Restaurant/Subscription fields
+  restaurantName: string;
+  restaurantAddress: string;
+  restaurantPhone: string;
+  restaurantType: string;
+  description: string | null;
+  servicePlanId: number;
+  durationDays: "ONE_MONTH" | "THREE_MONTHS" | "SIX_MONTHS";
+}
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -73,6 +89,7 @@ export default function CheckoutPage() {
 
   const addSubscriptionMutation = useAddSubscriptionMutation();
   const createPaymentMutation = useCreatePayOSPaymentMutation();
+  const updateProfileMutation = useUpdateProfileMutation();
 
   const {
     data: planData,
@@ -85,9 +102,13 @@ export default function CheckoutPage() {
 
   const form = useForm<CheckoutFormData>({
     defaultValues: {
+      // User profile fields
+      userName: user?.name || "",
+      userPhone: user?.phoneNumber || "",
+      // Restaurant fields
       restaurantName: "",
       restaurantAddress: "",
-      restaurantPhone: "",
+      restaurantPhone: user?.phoneNumber || "", // Default to user phone
       restaurantType: "",
       description: "",
       servicePlanId: Number(planId) || 0,
@@ -104,6 +125,18 @@ export default function CheckoutPage() {
       return;
     }
   }, [isAuthenticated, isLoading, router, planId]);
+
+  // Update form when user data changes
+  useEffect(() => {
+    if (user) {
+      form.setValue("userName", user.name || "");
+      form.setValue("userPhone", user.phoneNumber || "");
+      // Auto-fill restaurant phone with user phone if empty
+      if (!form.getValues("restaurantPhone")) {
+        form.setValue("restaurantPhone", user.phoneNumber || "");
+      }
+    }
+  }, [user, form]);
 
   // Update form when planId changes
   useEffect(() => {
@@ -156,6 +189,17 @@ export default function CheckoutPage() {
     }
 
     // Validation
+    // User profile validation
+    if (!data.userName.trim()) {
+      form.setError("userName", { message: "Họ và tên là bắt buộc" });
+      return;
+    }
+    if (!data.userPhone.trim()) {
+      form.setError("userPhone", { message: "Số điện thoại cá nhân là bắt buộc" });
+      return;
+    }
+    
+    // Restaurant validation
     if (!data.restaurantName.trim()) {
       form.setError("restaurantName", { message: "Tên nhà hàng là bắt buộc" });
       return;
@@ -182,11 +226,34 @@ export default function CheckoutPage() {
     setIsSubmitting(true);
 
     try {
+      // First, update user profile if there are changes
+      const currentUserName = user?.name || "";
+      const currentUserPhone = user?.phoneNumber || "";
+      
+      if (data.userName !== currentUserName || data.userPhone !== currentUserPhone) {
+        console.log("Updating user profile...");
+        try {
+          await updateProfileMutation.mutateAsync({
+            name: data.userName,
+            phoneNumber: data.userPhone,
+          });
+          toast.success("Cập nhật thông tin cá nhân thành công");
+        } catch (profileError) {
+          console.error("Profile update failed:", profileError);
+          // Continue with subscription creation even if profile update fails
+          toast.warning("Không thể cập nhật thông tin cá nhân, nhưng đăng ký vẫn tiếp tục");
+        }
+      }
+
       // Create subscription
       const subscriptionPayload: CreateSubscriptionBodyType = {
-        ...data,
-        durationDays: selectedDuration as any,
+        restaurantName: data.restaurantName,
+        restaurantAddress: data.restaurantAddress,
+        restaurantPhone: data.restaurantPhone,
+        restaurantType: data.restaurantType,
         description: data.description?.trim() || null,
+        servicePlanId: data.servicePlanId,
+        durationDays: selectedDuration as any,
       };
 
       // Add userId from auth store as fallback if backend doesn't extract from JWT
@@ -201,9 +268,9 @@ export default function CheckoutPage() {
       // Create PayOS payment
       const paymentPayload = {
       subscriptionId,
-      buyerName: user?.name || '',
+      buyerName: data.userName || user?.name || '',
       buyerEmail: user?.email || '',
-      buyerPhone: data.restaurantPhone || '',
+      buyerPhone: data.userPhone || user?.phoneNumber || '',
       };
 
       const paymentResponse =
@@ -356,29 +423,90 @@ export default function CheckoutPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Restaurant Information Form */}
               <div className="lg:col-span-2 space-y-6">
-                {/* User Info */}
+                {/* Personal Information */}
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <IconUser className="size-5" />
-                      Thông tin tài khoản
+                      Thông tin cá nhân
                     </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="bg-muted/50 rounded-lg p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-primary/10 rounded-full">
-                          <IconCheck className="size-4 text-primary" />
-                        </div>
-                        <div>
-                          <div className="font-medium">
-                            {user?.name || user?.email}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            {user?.email}
-                          </div>
-                        </div>
+                    <CardDescription>
+                      Cập nhật thông tin cá nhân của bạn
+                      <div className="mt-2 p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
+                        <p className="text-sm text-green-700 dark:text-green-300">
+                          ✅ <strong>Tự động lưu:</strong> Thông tin sẽ được cập nhật vào hồ sơ của bạn khi đăng ký.
+                        </p>
                       </div>
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {/* User Email (Read-only) */}
+                    <div className="space-y-2">
+                      <Label htmlFor="userEmail">Email tài khoản</Label>
+                      <div className="relative">
+                        <IconMail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                        <Input
+                          id="userEmail"
+                          value={user?.email || ""}
+                          disabled
+                          className="pl-10 bg-muted cursor-not-allowed"
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Email không thể thay đổi
+                      </p>
+                    </div>
+
+                    {/* User Name */}
+                    <div className="space-y-2">
+                      <Label htmlFor="userName">
+                        Họ và tên <span className="text-destructive">*</span>
+                      </Label>
+                      <div className="relative">
+                        <IconUser className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                        <Input
+                          id="userName"
+                          placeholder="Nhập họ và tên của bạn"
+                          className="pl-10"
+                          {...form.register("userName")}
+                        />
+                      </div>
+                      {form.formState.errors.userName && (
+                        <p className="text-sm text-destructive">
+                          {form.formState.errors.userName.message}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* User Phone */}
+                    <div className="space-y-2">
+                      <Label htmlFor="userPhone">
+                        Số điện thoại cá nhân <span className="text-destructive">*</span>
+                      </Label>
+                      <div className="relative">
+                        <IconPhone className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                        <Input
+                          id="userPhone"
+                          placeholder="0123456789"
+                          className="pl-10"
+                          {...form.register("userPhone")}
+                          onChange={(e) => {
+                            form.setValue("userPhone", e.target.value);
+                            // Auto-sync với restaurant phone nếu chưa có
+                            if (!form.getValues("restaurantPhone")) {
+                              form.setValue("restaurantPhone", e.target.value);
+                            }
+                          }}
+                        />
+                      </div>
+                      {form.formState.errors.userPhone && (
+                        <p className="text-sm text-destructive">
+                          {form.formState.errors.userPhone.message}
+                        </p>
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        Số điện thoại này sẽ được tự động điền vào thông tin nhà hàng
+                      </p>
                     </div>
                   </CardContent>
                 </Card>
@@ -527,6 +655,39 @@ export default function CheckoutPage() {
                             {planData.payload.data.description ||
                               "Gói dịch vụ chất lượng cao"}
                           </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Customer & Restaurant Info Preview */}
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium">Thông tin đăng ký</Label>
+                      <div className="text-xs space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Khách hàng:</span>
+                          <span className="font-medium">
+                            {form.watch("userName") || user?.name || "Chưa nhập"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">SĐT cá nhân:</span>
+                          <span className="font-medium">
+                            {form.watch("userPhone") || "Chưa nhập"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Nhà hàng:</span>
+                          <span className="font-medium">
+                            {form.watch("restaurantName") || "Chưa nhập"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">SĐT nhà hàng:</span>
+                          <span className="font-medium">
+                            {form.watch("restaurantPhone") || "Chưa nhập"}
+                          </span>
                         </div>
                       </div>
                     </div>

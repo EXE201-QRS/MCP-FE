@@ -18,6 +18,7 @@ interface AuthState {
 
   // Actions
   setUser: (user: UserType | null) => void;
+  updateUser: (updates: Partial<UserType>) => void;
   setIsAuthenticated: (isAuth: boolean) => void;
   setIsLoading: (loading: boolean) => void;
 
@@ -36,6 +37,9 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
 
   // Sync actions
   setUser: (user) => set({ user }),
+  updateUser: (updates) => set((state) => ({
+    user: state.user ? { ...state.user, ...updates } : null,
+  })),
   setIsAuthenticated: (isAuthenticated) => set({ isAuthenticated }),
   setIsLoading: (isLoading) => set({ isLoading }),
 
