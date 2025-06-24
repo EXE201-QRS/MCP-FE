@@ -1,17 +1,23 @@
-"use client"
+"use client";
 
-import { IconCheck, IconStar, IconCreditCard } from "@tabler/icons-react"
-import Link from "next/link"
+import { IconCheck, IconCreditCard, IconStar } from "@tabler/icons-react";
+import Link from "next/link";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 
 const plans = [
   {
     name: "Basic",
-    price: "299,000",
+    price: "199,000",
     duration: "tháng",
     description: "Phù hợp cho nhà hàng nhỏ, quán ăn gia đình",
     current: false,
@@ -25,13 +31,13 @@ const plans = [
     ],
   },
   {
-    name: "Professional", 
-    price: "599,000",
+    name: "Professional",
+    price: "399,000",
     duration: "tháng",
     description: "Dành cho nhà hàng vừa, chuỗi nhỏ",
     current: true,
     features: [
-      "Tối đa 30 bàn", 
+      "Tối đa 30 bàn",
       "15 nhân viên sử dụng",
       "Dashboard nâng cao",
       "Analytics chi tiết",
@@ -44,13 +50,13 @@ const plans = [
   },
   {
     name: "Enterprise",
-    price: "1,299,000", 
+    price: "799,000",
     duration: "tháng",
     description: "Cho chuỗi nhà hàng lớn, enterprise",
     current: false,
     features: [
       "Không giới hạn bàn",
-      "Không giới hạn nhân viên", 
+      "Không giới hạn nhân viên",
       "Dashboard enterprise",
       "Advanced analytics",
       "White-label solution",
@@ -60,21 +66,23 @@ const plans = [
       "SLA đảm bảo",
     ],
   },
-]
+];
 
 const currentUsage = {
   tables: { current: 18, max: 30, percentage: 60 },
   staff: { current: 8, max: 15, percentage: 53 },
   orders: { current: 2847, max: "Unlimited" },
   storage: { current: 1.2, max: 5, percentage: 24, unit: "GB" },
-}
+};
 
 export default function CustomerSubscriptionPage() {
   return (
     <div className="space-y-6 p-6">
       {/* Header */}
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Quản lý gói dịch vụ</h1>
+        <h1 className="text-3xl font-bold tracking-tight">
+          Quản lý gói dịch vụ
+        </h1>
         <p className="text-muted-foreground">
           Quản lý và nâng cấp gói dịch vụ QOS của bạn
         </p>
@@ -93,19 +101,23 @@ export default function CustomerSubscriptionPage() {
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Bàn</span>
-                <span>{currentUsage.tables.current}/{currentUsage.tables.max}</span>
+                <span>
+                  {currentUsage.tables.current}/{currentUsage.tables.max}
+                </span>
               </div>
               <Progress value={currentUsage.tables.percentage} />
             </div>
-            
+
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Nhân viên</span>
-                <span>{currentUsage.staff.current}/{currentUsage.staff.max}</span>
+                <span>
+                  {currentUsage.staff.current}/{currentUsage.staff.max}
+                </span>
               </div>
               <Progress value={currentUsage.staff.percentage} />
             </div>
-            
+
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Đơn hàng tháng này</span>
@@ -113,11 +125,14 @@ export default function CustomerSubscriptionPage() {
               </div>
               <Progress value={85} />
             </div>
-            
+
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Lưu trữ</span>
-                <span>{currentUsage.storage.current}/{currentUsage.storage.max} {currentUsage.storage.unit}</span>
+                <span>
+                  {currentUsage.storage.current}/{currentUsage.storage.max}{" "}
+                  {currentUsage.storage.unit}
+                </span>
               </div>
               <Progress value={currentUsage.storage.percentage} />
             </div>
@@ -128,11 +143,11 @@ export default function CustomerSubscriptionPage() {
       {/* Plans */}
       <div className="grid gap-6 lg:grid-cols-3">
         {plans.map((plan) => (
-          <Card 
-            key={plan.name} 
+          <Card
+            key={plan.name}
             className={`relative ${
-              plan.current 
-                ? "border-primary ring-2 ring-primary/10 shadow-lg" 
+              plan.current
+                ? "border-primary ring-2 ring-primary/10 shadow-lg"
                 : "border-border/50"
             }`}
           >
@@ -144,7 +159,7 @@ export default function CustomerSubscriptionPage() {
                 </Badge>
               </div>
             )}
-            
+
             <CardHeader className="text-center">
               <CardTitle className="text-2xl">{plan.name}</CardTitle>
               <CardDescription className="text-sm">
@@ -173,8 +188,8 @@ export default function CustomerSubscriptionPage() {
                 </ul>
               </div>
 
-              <Button 
-                className="w-full" 
+              <Button
+                className="w-full"
                 variant={plan.current ? "outline" : "default"}
                 disabled={plan.current}
               >
@@ -207,7 +222,7 @@ export default function CustomerSubscriptionPage() {
                 <Badge variant="outline">Visa</Badge>
               </div>
             </div>
-            
+
             <div>
               <h4 className="font-medium mb-2">Chu kỳ thanh toán</h4>
               <p className="text-sm text-muted-foreground">
@@ -215,19 +230,15 @@ export default function CustomerSubscriptionPage() {
               </p>
             </div>
           </div>
-          
+
           <div className="flex gap-2">
             <Button variant="outline" asChild>
-              <Link href="/customer/payments">
-                Xem lịch sử thanh toán
-              </Link>
+              <Link href="/customer/payments">Xem lịch sử thanh toán</Link>
             </Button>
-            <Button variant="outline">
-              Cập nhật phương thức thanh toán
-            </Button>
+            <Button variant="outline">Cập nhật phương thức thanh toán</Button>
           </div>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

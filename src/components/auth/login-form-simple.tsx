@@ -7,7 +7,7 @@ import {
   IconMail,
 } from "@tabler/icons-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -23,6 +23,8 @@ import { LoginBodyType } from "@/schemaValidations/auth.model";
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnUrl = searchParams.get("returnUrl");
   const loginMutation = useLoginMutation();
 
   const form = useForm<LoginBodyType>({
@@ -52,18 +54,24 @@ export function LoginForm() {
       const response = await loginMutation.mutateAsync(data);
       toast.success(response.payload.message || "Đăng nhập thành công!");
       
-      // Redirect based on user role from response or token
-      const token = response.payload.data.sessionToken;
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        if (payload.roleName === 'ADMIN_SYSTEM') {
-          router.push("/manage/dashboard");
-        } else {
+      // Redirect based on returnUrl or user role
+      if (returnUrl) {
+        router.push(decodeURIComponent(returnUrl));
+      } else {
+        // Default redirect based on user role from response or token
+        const token = response.payload.data.sessionToken;
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          if (payload.roleName === 'ADMIN_SYSTEM') {
+            router.push("/manage/dashboard");
+          } else {
+            // Customer always goes to dashboard
+            router.push("/customer/dashboard");
+          }
+        } catch {
+          // Fallback to customer dashboard
           router.push("/customer/dashboard");
         }
-      } catch {
-        // Fallback to customer dashboard
-        router.push("/customer/dashboard");
       }
       
       router.refresh();

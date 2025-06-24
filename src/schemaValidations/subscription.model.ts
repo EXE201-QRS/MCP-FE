@@ -1,0 +1,100 @@
+import { z } from "zod";
+
+export const SubscriptionSchema = z
+  .object({
+    id: z.number(),
+    userId: z.number(),
+    restaurantName: z.string().trim().min(1).max(500),
+    restaurantAddress: z.string().trim().min(1).max(1000),
+    restaurantPhone: z.string().trim().min(1).max(15),
+    restaurantType: z.string().trim().min(1).max(200),
+    description: z.string().trim().max(1000).nullable(),
+    servicePlanId: z.number(),
+    durationDays: z.enum(["ONE_MONTH", "THREE_MONTHS", "SIX_MONTHS"]),
+    startDate: z.date().nullable(),
+    endDate: z.date().nullable(),
+    status: z.enum(["PENDING", "PAID", "ACTIVE", "EXPIRED", "CANCELLED"]),
+    createdById: z.number().nullable(),
+    updatedById: z.number().nullable(),
+    deletedById: z.number().nullable(),
+    deletedAt: z.date().nullable(),
+    createdAt: z.date(),
+    updatedAt: z.date(),
+  })
+  .strict();
+
+export const ServicePlanRelationSchema = z
+  .object({
+    id: z.number(),
+    name: z.string(),
+    description: z.string().nullable(),
+    price: z.number(),
+  })
+  .strict();
+
+export const SubscriptionWithServicePlanSchema = SubscriptionSchema.extend({
+  servicePlan: ServicePlanRelationSchema,
+});
+
+// List subscriptions
+export const GetSubscriptionsResSchema = z.object({
+  data: z.array(SubscriptionWithServicePlanSchema),
+  totalItems: z.number(),
+  page: z.number(),
+  limit: z.number(),
+  totalPages: z.number(),
+});
+
+export const GetSubscriptionParamsSchema = z
+  .object({
+    subscriptionId: z.coerce.number().int().positive(),
+  })
+  .strict();
+
+export const GetSubscriptionDetailResSchema = z.object({
+  data: SubscriptionWithServicePlanSchema,
+  message: z.string(),
+});
+
+export const CreateSubscriptionBodySchema = SubscriptionSchema
+  .pick({
+    restaurantName: true,
+    restaurantAddress: true,
+    restaurantPhone: true,
+    restaurantType: true,
+    description: true,
+    servicePlanId: true,
+    durationDays: true,
+  })
+  .strict();
+
+export const UpdateSubscriptionBodySchema = CreateSubscriptionBodySchema.partial();
+
+export type SubscriptionType = z.infer<typeof SubscriptionSchema>;
+export type SubscriptionWithServicePlanType = z.infer<typeof SubscriptionWithServicePlanSchema>;
+export type GetSubscriptionsResType = z.infer<typeof GetSubscriptionsResSchema>;
+export type GetSubscriptionParamsType = z.infer<typeof GetSubscriptionParamsSchema>;
+export type GetSubscriptionDetailResType = z.infer<typeof GetSubscriptionDetailResSchema>;
+export type CreateSubscriptionBodyType = z.infer<typeof CreateSubscriptionBodySchema>;
+export type UpdateSubscriptionBodyType = z.infer<typeof UpdateSubscriptionBodySchema>;
+
+// Duration options for UI
+export const DurationOptions = [
+  { value: "ONE_MONTH", label: "1 tháng", months: 1 },
+  { value: "THREE_MONTHS", label: "3 tháng", months: 3 },
+  { value: "SIX_MONTHS", label: "6 tháng", months: 6 },
+] as const;
+
+// Restaurant type options
+export const RestaurantTypeOptions = [
+  { value: "fast_food", label: "Thức ăn nhanh" },
+  { value: "cafe", label: "Quán café" },
+  { value: "fine_dining", label: "Nhà hàng cao cấp" },
+  { value: "casual_dining", label: "Nhà hàng bình dân" },
+  { value: "buffet", label: "Buffet" },
+  { value: "bar_pub", label: "Bar/Pub" },
+  { value: "street_food", label: "Đồ ăn đường phố" },
+  { value: "bakery", label: "Tiệm bánh" },
+  { value: "ice_cream", label: "Kem/Chè" },
+  { value: "other", label: "Khác" },
+] as const;

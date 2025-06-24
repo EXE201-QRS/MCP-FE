@@ -200,13 +200,13 @@ export default function ContactPage() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="basic">
-                              Basic - 299,000đ/tháng
+                              Basic - 199,000đ/tháng
                             </SelectItem>
                             <SelectItem value="professional">
-                              Professional - 599,000đ/tháng
+                              Professional - 399,000đ/tháng
                             </SelectItem>
                             <SelectItem value="enterprise">
-                              Enterprise - 1,299,000đ/tháng
+                              Enterprise - 799,000đ/tháng
                             </SelectItem>
                             <SelectItem value="custom">
                               Tùy chỉnh theo nhu cầu
