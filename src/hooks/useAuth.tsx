@@ -1,5 +1,7 @@
 import authApiRequest from "@/apiRequests/auth";
-import { useMutation } from "@tanstack/react-query";
+import { UpdateProfileBodyType } from "@/schemaValidations/auth.model";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuthStore } from "@/stores/auth.store";
 
 export const useLoginMutation = () => {
   return useMutation({
@@ -22,5 +24,23 @@ export const useSendOTPMutation = () => {
 export const useForgotPasswordMutation = () => {
   return useMutation({
     mutationFn: authApiRequest.forgotPassword,
+  });
+};
+
+export const useUpdateProfileMutation = () => {
+  const queryClient = useQueryClient();
+  const { updateUser } = useAuthStore();
+  
+  return useMutation({
+    mutationFn: authApiRequest.sUpdateProfile,
+    onSuccess: (data) => {
+      // Update user in auth store
+      updateUser({
+        name: data.payload.data.name,
+        phoneNumber: data.payload.data.phoneNumber,
+      });
+      // Invalidate auth queries
+      queryClient.invalidateQueries({ queryKey: ["auth"] });
+    },
   });
 };
