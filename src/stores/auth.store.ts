@@ -42,15 +42,18 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   // Fetch user profile
   fetchUserProfile: async () => {
     try {
+      console.log('📝 Fetching user profile...');
       set({ isLoading: true });
       const response = await authApiRequest.me();
+      const userData = (response.payload as unknown as { data: UserType }).data;
+      console.log('✅ User profile fetched successfully:', userData);
       set({
-        user: (response.payload as unknown as { data: UserType }).data,
+        user: userData,
         isAuthenticated: true,
         isLoading: false,
       });
     } catch (error: any) {
-      console.error("Failed to fetch user profile:", error);
+      console.error("❌ Failed to fetch user profile:", error);
       removeTokensFromLocalStorage();
       set({
         user: null,
@@ -89,13 +92,16 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   // Initialize auth state
   initialize: async () => {
     try {
+      console.log('🚀 Initializing auth state...');
       set({ isLoading: true });
       
       const token = getSessionTokenFromLocalStorage();
       if (token) {
+        console.log('🎫 Token found, fetching profile...');
         // Fetch user profile if token exists
         await get().fetchUserProfile();
       } else {
+        console.log('❌ No token found, setting as unauthenticated');
         // No token, set as unauthenticated
         set({ 
           user: null, 
@@ -104,7 +110,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         });
       }
     } catch (error) {
-      console.error("Auth initialization error:", error);
+      console.error("❌ Auth initialization error:", error);
       // Clear invalid data
       removeTokensFromLocalStorage();
       set({ 
