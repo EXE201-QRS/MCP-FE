@@ -21,16 +21,27 @@ export async function POST(request: NextRequest) {
     const cookieStore = await cookies();
     const result = await authApiRequest.sRegister(bodyValidated.data);
 
-    // Set httpOnly cookie
-    cookieStore.set("sessionToken", result.payload.data.sessionToken, {
+    const sessionToken = result.payload.data.sessionToken;
+
+    // Set httpOnly cookie cho middleware (giống login)
+    cookieStore.set("sessionToken", sessionToken, {
       path: "/",
       httpOnly: true,
       sameSite: "lax",
-      secure: true,
-      maxAge: 60 * 60, // 1 hour
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60 * 24 * 7, // 7 days (giống login)
     });
 
-    return NextResponse.json(result.payload);
+    // Trả về response bao gồm cả token cho client-side (giống login)
+    const response = {
+      ...result.payload,
+      data: {
+        ...result.payload.data,
+        sessionToken // Include token for client-side
+      }
+    };
+
+    return NextResponse.json(response);
   } catch (error: any) {
     return NextResponse.json(
       {

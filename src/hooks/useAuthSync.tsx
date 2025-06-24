@@ -3,12 +3,11 @@
 import { getSessionTokenFromLocalStorage } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth.store";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 interface User {
   id: string;
-  roleName: "ADMIN_SYSTEM" | "CUSTOMER" | string; // tùy vào app bạn
-  // thêm field khác nếu cần
+  roleName: "ADMIN_SYSTEM" | "CUSTOMER" | string;
 }
 
 interface AuthStore {
@@ -19,23 +18,33 @@ interface AuthStore {
 }
 
 /**
- * Hook để đồng bộ auth state sau login
+ * Hook để đồng bộ auth state sau login/register
  */
 export function useAuthSync() {
-  const router = useRouter();
   const { forceRefresh, isLoading, isAuthenticated } = useAuthStore();
+  const lastTokenRef = useRef<string | null>(null);
 
   useEffect(() => {
     const checkTokenChange = async () => {
-      const token = getSessionTokenFromLocalStorage();
-
-      if (token && !isAuthenticated && !isLoading) {
-        await forceRefresh();
+      const currentToken = getSessionTokenFromLocalStorage();
+      
+      // Nếu token thay đổi (từ null thành có hoặc ngược lại)
+      if (currentToken !== lastTokenRef.current) {
+        lastTokenRef.current = currentToken;
+        
+        if (currentToken && !isAuthenticated && !isLoading) {
+          console.log('🔄 Token detected, refreshing auth state...');
+          await forceRefresh();
+        }
       }
     };
 
+    // Check ngay khi mount
     checkTokenChange();
-    const interval = setInterval(checkTokenChange, 1000);
+    
+    // Check mỗi 500ms (giảm từ 1000ms)
+    const interval = setInterval(checkTokenChange, 500);
+    
     return () => clearInterval(interval);
   }, [forceRefresh, isAuthenticated, isLoading]);
 

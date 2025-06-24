@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useLoginMutation } from "@/hooks/useAuth";
-import { handleErrorApi } from "@/lib/utils";
+import { handleErrorApi, setSessionTokenToLocalStorage } from "@/lib/utils";
 import { LoginBodyType } from "@/schemaValidations/auth.model";
 
 export function LoginForm() {
@@ -54,12 +54,17 @@ export function LoginForm() {
       const response = await loginMutation.mutateAsync(data);
       toast.success(response.payload.message || "Đăng nhập thành công!");
       
+      // Store token to localStorage (ENSURE this is done!)
+      const token = response.payload.data.sessionToken;
+      if (token) {
+        setSessionTokenToLocalStorage(token);
+      }
+      
       // Redirect based on returnUrl or user role
       if (returnUrl) {
         router.push(decodeURIComponent(returnUrl));
       } else {
         // Default redirect based on user role from response or token
-        const token = response.payload.data.sessionToken;
         try {
           const payload = JSON.parse(atob(token.split('.')[1]));
           if (payload.roleName === 'ADMIN_SYSTEM') {
