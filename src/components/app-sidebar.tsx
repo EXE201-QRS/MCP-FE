@@ -11,6 +11,7 @@ import {
   IconFileWord,
   IconHelp,
   IconInnerShadowTop,
+  IconPackages,
   IconReport,
   IconSearch,
   IconSettings,
@@ -47,6 +48,11 @@ const data = {
       title: "Dashboard",
       url: "/manage/dashboard",
       icon: IconDashboard,
+    },
+    {
+      title: "Gói dịch vụ", // Service Plans
+      url: "/manage/service-plans",
+      icon: IconPackages,
     },
     {
       title: "Quản lý khách hàng", // Quản lý khách hàng

@@ -1,10 +1,15 @@
-"use client"
+"use client";
 
-import { IconShoppingCart, IconStar, IconCreditCard, IconSettings, IconUser } from "@tabler/icons-react"
+import {
+  IconCreditCard,
+  IconSettings,
+  IconShoppingCart,
+  IconStar,
+  IconUser,
+} from "@tabler/icons-react";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const recentActivities = [
   {
@@ -35,7 +40,7 @@ const recentActivities = [
     time: "1 giờ trước",
     icon: IconCreditCard,
     status: "success",
-    amount: "₫599,000",
+    amount: "₫399,000",
   },
   {
     id: 4,
@@ -55,20 +60,20 @@ const recentActivities = [
     icon: IconUser,
     status: "info",
   },
-]
+];
 
 const getStatusBadge = (status: string) => {
   switch (status) {
     case "success":
-      return <Badge variant="default" className="h-2 w-2 p-0 bg-green-500" />
+      return <Badge variant="default" className="h-2 w-2 p-0 bg-green-500" />;
     case "warning":
-      return <Badge variant="default" className="h-2 w-2 p-0 bg-yellow-500" />
+      return <Badge variant="default" className="h-2 w-2 p-0 bg-yellow-500" />;
     case "error":
-      return <Badge variant="default" className="h-2 w-2 p-0 bg-red-500" />
+      return <Badge variant="default" className="h-2 w-2 p-0 bg-red-500" />;
     default:
-      return <Badge variant="default" className="h-2 w-2 p-0 bg-blue-500" />
+      return <Badge variant="default" className="h-2 w-2 p-0 bg-blue-500" />;
   }
-}
+};
 
 export function CustomerRecentActivity() {
   return (
@@ -83,7 +88,7 @@ export function CustomerRecentActivity() {
               <div className="flex items-center justify-center w-10 h-10 rounded-full bg-muted">
                 <activity.icon className="h-5 w-5 text-muted-foreground" />
               </div>
-              
+
               <div className="flex-1 space-y-1">
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-medium">{activity.title}</p>
@@ -96,14 +101,19 @@ export function CustomerRecentActivity() {
                     {activity.rating && (
                       <div className="flex items-center">
                         {[...Array(activity.rating)].map((_, i) => (
-                          <IconStar key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                          <IconStar
+                            key={i}
+                            className="h-3 w-3 fill-yellow-400 text-yellow-400"
+                          />
                         ))}
                       </div>
                     )}
                     {getStatusBadge(activity.status)}
                   </div>
                 </div>
-                <p className="text-sm text-muted-foreground">{activity.description}</p>
+                <p className="text-sm text-muted-foreground">
+                  {activity.description}
+                </p>
                 <p className="text-xs text-muted-foreground">{activity.time}</p>
               </div>
             </div>
@@ -111,5 +121,5 @@ export function CustomerRecentActivity() {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

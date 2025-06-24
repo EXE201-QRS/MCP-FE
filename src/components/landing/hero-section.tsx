@@ -49,10 +49,15 @@ export function HeroSection() {
                 <IconArrowRight className="ml-2 size-4 transition-transform group-hover:translate-x-1" />
               </Link>
             </Button>
+            <Button variant="outline" size="lg" asChild>
+              <Link href="/plans">
+                Xem giá
+              </Link>
+            </Button>
             <DemoDialog>
-              <Button variant="outline" size="lg" className="group">
+              <Button variant="ghost" size="lg" className="group">
                 <IconShareplay className="mr-2 size-4" />
-                Xem demo trực tuyến
+                Xem demo
               </Button>
             </DemoDialog>
           </div>
