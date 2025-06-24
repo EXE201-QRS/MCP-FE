@@ -10,6 +10,9 @@ const prefix = "/subscriptions";
 const subscriptionApiRequests = {
   list: (params?: { page?: number; limit?: number }) =>
     http.getList<GetSubscriptionsResType>(`${prefix}`, { params }),
+  // Admin endpoint to get all subscriptions
+  adminListAll: (params?: { page?: number; limit?: number }) =>
+    http.getList<GetSubscriptionsResType>(`${prefix}/admin/all`, { params }),
   addSubscription: (body: CreateSubscriptionBodyType) =>
     http.post<GetSubscriptionDetailResType>(prefix, body),
   updateSubscription: (id: number, body: UpdateSubscriptionBodyType) =>

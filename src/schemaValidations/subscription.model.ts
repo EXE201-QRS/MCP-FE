@@ -23,6 +23,14 @@ export const SubscriptionSchema = z
   })
   .strict();
 
+export const UserRelationSchema = z
+  .object({
+    id: z.number(),
+    name: z.string().nullable(),
+    email: z.string(),
+  })
+  .strict();
+
 export const ServicePlanRelationSchema = z
   .object({
     id: z.number(),
@@ -32,13 +40,14 @@ export const ServicePlanRelationSchema = z
   })
   .strict();
 
-export const SubscriptionWithServicePlanSchema = SubscriptionSchema.extend({
+export const SubscriptionWithRelationsSchema = SubscriptionSchema.extend({
+  user: UserRelationSchema,
   servicePlan: ServicePlanRelationSchema,
 });
 
-// List subscriptions
+// List subscriptions - includes user and servicePlan
 export const GetSubscriptionsResSchema = z.object({
-  data: z.array(SubscriptionWithServicePlanSchema),
+  data: z.array(SubscriptionWithRelationsSchema),
   totalItems: z.number(),
   page: z.number(),
   limit: z.number(),
@@ -51,8 +60,9 @@ export const GetSubscriptionParamsSchema = z
   })
   .strict();
 
+// Single subscription detail - also includes user and servicePlan
 export const GetSubscriptionDetailResSchema = z.object({
-  data: SubscriptionWithServicePlanSchema,
+  data: SubscriptionWithRelationsSchema,
   message: z.string(),
 });
 
@@ -71,7 +81,7 @@ export const CreateSubscriptionBodySchema = SubscriptionSchema
 export const UpdateSubscriptionBodySchema = CreateSubscriptionBodySchema.partial();
 
 export type SubscriptionType = z.infer<typeof SubscriptionSchema>;
-export type SubscriptionWithServicePlanType = z.infer<typeof SubscriptionWithServicePlanSchema>;
+export type SubscriptionWithRelationsType = z.infer<typeof SubscriptionWithRelationsSchema>;
 export type GetSubscriptionsResType = z.infer<typeof GetSubscriptionsResSchema>;
 export type GetSubscriptionParamsType = z.infer<typeof GetSubscriptionParamsSchema>;
 export type GetSubscriptionDetailResType = z.infer<typeof GetSubscriptionDetailResSchema>;
