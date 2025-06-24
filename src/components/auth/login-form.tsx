@@ -13,13 +13,17 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { useLoginMutation } from "@/hooks/useAuth"
-import { handleErrorApi } from "@/lib/utils"
+import { handleErrorApi, setSessionTokenToLocalStorage } from "@/lib/utils"
+import { getRedirectUrl, redirectAfterAuth } from "@/lib/auth-utils"
 import { LoginBodySchema, LoginBodyType } from "@/schemaValidations/auth.model"
+import { useAuthStore } from "@/stores/auth.store"
+import { RoleType } from "@/constants/auth.constant"
 
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
   const loginMutation = useLoginMutation()
+  const { setUser, setIsAuthenticated } = useAuthStore()
 
   const form = useForm<LoginBodyType>({
     resolver: zodResolver(LoginBodySchema),
@@ -34,9 +38,33 @@ export function LoginForm() {
 
     try {
       const response = await loginMutation.mutateAsync(data)
-      toast.success(response.payload.message || "Đăng nhập thành công!")
-      router.push("/manage/dashboard")
-      router.refresh()
+      
+      // Extract data từ response
+      const { sessionToken, data: userData, message } = response.payload as any
+      
+      if (userData && sessionToken) {
+        // Lưu token vào localStorage cho client-side
+        setSessionTokenToLocalStorage(sessionToken)
+        
+        // Update auth store
+        setUser(userData)
+        setIsAuthenticated(true)
+        
+        // Show success message
+        toast.success(message || "Đăng nhập thành công!")
+        
+        // Small delay để đảm bảo state được update
+        await new Promise(resolve => setTimeout(resolve, 100))
+        
+        // Get redirect URL and navigate based on role
+        const redirectUrl = getRedirectUrl()
+        const targetUrl = redirectAfterAuth(userData.roleName as RoleType, redirectUrl)
+        
+        // Force hard navigation để middleware nhận cookie
+        window.location.href = targetUrl
+      } else {
+        throw new Error("Không thể lấy thông tin người dùng")
+      }
     } catch (error) {
       handleErrorApi({
         error,

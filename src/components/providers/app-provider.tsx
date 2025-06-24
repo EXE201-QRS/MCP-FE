@@ -1,8 +1,10 @@
 "use client";
 
+import { useAuthSync } from "@/hooks/useAuthSync";
+import { useAuthStore } from "@/stores/auth.store";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { create } from "zustand";
+import { useEffect } from "react";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -13,13 +15,18 @@ const queryClient = new QueryClient({
   },
 });
 
-type AppStoreType = {
-  isAuth: boolean;
-};
+// Component để initialize auth state
+function AuthInitializer({ children }: { children: React.ReactNode }) {
+  const { initialize } = useAuthStore();
+  const { isLoading } = useAuthSync();
 
-export const useAppStore = create<AppStoreType>((set, get) => ({
-  isAuth: false,
-}));
+  useEffect(() => {
+    // Initialize auth state khi app load
+    initialize();
+  }, []);
+
+  return <>{children}</>;
+}
 
 export default function AppProvider({
   children,
@@ -28,7 +35,7 @@ export default function AppProvider({
 }) {
   return (
     <QueryClientProvider client={queryClient}>
-      {children}
+      <AuthInitializer>{children}</AuthInitializer>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );
