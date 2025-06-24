@@ -127,11 +127,12 @@ export function RegisterForm() {
         if (payload.roleName === 'ADMIN_SYSTEM') {
           router.push("/manage/dashboard");
         } else {
-          router.push("/customer/dashboard");
+          // Redirect customer to plans selection page
+          router.push("/plans?from=register");
         }
       } catch {
-        // Fallback to customer dashboard
-        router.push("/customer/dashboard");
+        // Fallback to plans page for customers
+        router.push("/plans?from=register");
       }
       
       router.refresh();

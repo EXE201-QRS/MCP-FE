@@ -119,15 +119,27 @@ export function PricingSection() {
               </CardHeader>
 
               <CardContent className="space-y-6">
-                <Button 
-                  className="w-full" 
-                  variant={plan.popular ? "default" : "outline"}
-                  asChild
-                >
-                  <Link href="/register">
-                    Bắt đầu miễn phí
-                  </Link>
-                </Button>
+                <div className="flex flex-col gap-2">
+                  <Button 
+                    className="w-full" 
+                    variant={plan.popular ? "default" : "outline"}
+                    asChild
+                  >
+                    <Link href="/register">
+                      Bắt đầu miễn phí
+                    </Link>
+                  </Button>
+                  <Button 
+                    className="w-full" 
+                    variant="ghost"
+                    size="sm"
+                    asChild
+                  >
+                    <Link href="/plans">
+                      Xem tất cả gói
+                    </Link>
+                  </Button>
+                </div>
 
                 <div className="space-y-3">
                   <p className="text-sm font-medium">Tính năng bao gồm:</p>
