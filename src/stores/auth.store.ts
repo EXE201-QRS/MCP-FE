@@ -25,6 +25,7 @@ interface AuthState {
   fetchUserProfile: () => Promise<void>;
   logout: () => Promise<void>;
   initialize: () => Promise<void>;
+  forceRefresh: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()((set, get) => ({
@@ -87,16 +88,45 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
 
   // Initialize auth state
   initialize: async () => {
+    try {
+      set({ isLoading: true });
+      
+      const token = getSessionTokenFromLocalStorage();
+      if (token) {
+        // Fetch user profile if token exists
+        await get().fetchUserProfile();
+      } else {
+        // No token, set as unauthenticated
+        set({ 
+          user: null, 
+          isAuthenticated: false, 
+          isLoading: false 
+        });
+      }
+    } catch (error) {
+      console.error("Auth initialization error:", error);
+      // Clear invalid data
+      removeTokensFromLocalStorage();
+      set({ 
+        user: null, 
+        isAuthenticated: false, 
+        isLoading: false 
+      });
+    }
+  },
+
+  // Force refresh auth state
+  forceRefresh: async () => {
     const token = getSessionTokenFromLocalStorage();
     if (token) {
       await get().fetchUserProfile();
     } else {
-      set({ isLoading: false });
+      set({ 
+        user: null, 
+        isAuthenticated: false, 
+        isLoading: false 
+      });
     }
   },
 }));
 
-// Initialize auth when store is created
-if (typeof window !== "undefined") {
-  useAuthStore.getState().initialize();
-}
