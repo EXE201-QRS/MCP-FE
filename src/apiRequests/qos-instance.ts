@@ -2,6 +2,7 @@ import http from "@/lib/http";
 import {
   CreateQosInstanceBodyType,
   GetQosInstanceDetailResType,
+  GetQosInstanceDetailResWithFullType,
   GetQosInstanceesResType,
   UpdateQosInstanceBodyType,
 } from "@/schemaValidations/qos-instance.model";
@@ -15,7 +16,7 @@ const qosInstanceApiRequests = {
   updateQosInstance: (id: number, body: UpdateQosInstanceBodyType) =>
     http.put<GetQosInstanceDetailResType>(`${prefix}/${id}`, body),
   getQosInstance: (id: number) =>
-    http.get<GetQosInstanceDetailResType>(`${prefix}/${id}`),
+    http.get<GetQosInstanceDetailResWithFullType>(`${prefix}/${id}`),
   deleteQosInstance: (id: number) => http.delete(`${prefix}/${id}`),
 };
 export default qosInstanceApiRequests;

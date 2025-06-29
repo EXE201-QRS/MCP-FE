@@ -2,6 +2,7 @@
 
 import {
   IconCamera,
+  IconClipboardList,
   IconCreditCard,
   IconDashboard,
   IconDatabase,
@@ -17,9 +18,7 @@ import {
   IconSettings,
   IconStar,
   IconTarget,
-  IconUsers,
   IconUserCheck,
-  IconClipboardList,
 } from "@tabler/icons-react";
 import * as React from "react";
 
