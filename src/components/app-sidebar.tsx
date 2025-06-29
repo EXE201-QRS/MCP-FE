@@ -2,6 +2,7 @@
 
 import {
   IconCamera,
+  IconClipboardList,
   IconCreditCard,
   IconDashboard,
   IconDatabase,
@@ -17,7 +18,7 @@ import {
   IconSettings,
   IconStar,
   IconTarget,
-  IconUsers,
+  IconUserCheck,
 } from "@tabler/icons-react";
 import * as React from "react";
 
@@ -57,7 +58,7 @@ const data = {
     {
       title: "Quản lý đăng ký", // Subscriptions Management
       url: "/manage/subscriptions",
-      icon: IconUsers,
+      icon: IconClipboardList,
     },
     {
       title: "Quản lý thanh toán", // Payments Management
@@ -67,7 +68,7 @@ const data = {
     {
       title: "Quản lý khách hàng", // Quản lý khách hàng
       url: "/manage/customers",
-      icon: IconUsers,
+      icon: IconUserCheck,
     },
     {
       title: "Quản lý QOS instances", // Quản lý QOS instances
