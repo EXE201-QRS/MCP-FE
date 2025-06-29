@@ -10,7 +10,7 @@ import {
 
 const prefix = "/users";
 const userApiRequests = {
-  list: (params?: { page?: number; limit?: number }) =>
+  list: (params?: { page?: number; limit?: number; role?: string }) =>
     http.getList<GetUsersResType>(`${prefix}`, { params }),
   addUser: (body: CreateUserBodyType) =>
     http.post<CreateUserResType>(prefix, body),

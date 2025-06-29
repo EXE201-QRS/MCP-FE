@@ -13,6 +13,14 @@ export const useGetUserList = (params?: {
   });
 };
 
+// Helper hook specifically for customers
+export const useGetCustomerList = (params?: {
+  page?: number;
+  limit?: number;
+}) => {
+  return useGetUserList({ ...params, role: "CUSTOMER" });
+};
+
 export const useGetUser = ({
   id,
   enabled,
