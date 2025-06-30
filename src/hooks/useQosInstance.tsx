@@ -32,8 +32,19 @@ export const useAddQosInstanceMutation = () => {
   return useMutation({
     mutationFn: qosInstanceApiRequests.addQosInstance,
     onSuccess: () => {
+      // Invalidate all QOS instances queries (using predicate to match any params)
       queryClient.invalidateQueries({
-        queryKey: ["qos-instances"],
+        predicate: (query) => {
+          return query.queryKey[0] === "qos-instances";
+        },
+      });
+      // Invalidate subscription related queries
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const key = query.queryKey[0] as string;
+          return key === "subscriptions" || key === "admin-subscriptions" || 
+                 key === "subscription-with-qos" || key === "subscription-qos-health";
+        },
       });
     },
   });
@@ -44,9 +55,20 @@ export const useUpdateQosInstanceMutation = () => {
   return useMutation({
     mutationFn: ({ id, ...body }: UpdateQosInstanceBodyType & { id: number }) =>
       qosInstanceApiRequests.updateQosInstance(id, body),
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
+      // Invalidate all QOS instances queries (using predicate to match any params)
       queryClient.invalidateQueries({
-        queryKey: ["qos-instances"],
+        predicate: (query) => {
+          return query.queryKey[0] === "qos-instances";
+        },
+      });
+      // Invalidate subscription related queries
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const key = query.queryKey[0] as string;
+          return key === "subscriptions" || key === "admin-subscriptions" || 
+                 key === "subscription-with-qos" || key === "subscription-qos-health";
+        },
       });
     },
   });
@@ -57,8 +79,19 @@ export const useDeleteQosInstanceMutation = () => {
   return useMutation({
     mutationFn: qosInstanceApiRequests.deleteQosInstance,
     onSuccess: () => {
+      // Invalidate all QOS instances queries (using predicate to match any params)
       queryClient.invalidateQueries({
-        queryKey: ["qos-instances"],
+        predicate: (query) => {
+          return query.queryKey[0] === "qos-instances";
+        },
+      });
+      // Invalidate subscription related queries
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const key = query.queryKey[0] as string;
+          return key === "subscriptions" || key === "admin-subscriptions" || 
+                 key === "subscription-with-qos" || key === "subscription-qos-health";
+        },
       });
     },
   });

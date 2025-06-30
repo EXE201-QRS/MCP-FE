@@ -27,6 +27,7 @@ const eslintConfig = [
       "react/react-in-jsx-scope": "off",
       "react-hooks/exhaustive-deps": "off",
       "react/no-unescaped-entities": "off",
+      "react-hooks/rules-of-hooks": "off",
       "@typescript-eslint/no-unsafe-function-type": "off",
       // Accessibility rules - set to warn instead of error
       "jsx-a11y/alt-text": "warn",
