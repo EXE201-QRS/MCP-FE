@@ -19,7 +19,10 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { QosInstanceStatus } from "@/constants/qos-instance.constant";
-import { useAddQosInstanceMutation } from "@/hooks/useQosInstance";
+import {
+  useAddQosInstanceMutation,
+  useGetQosInstanceList,
+} from "@/hooks/useQosInstance";
 import {
   useGetAdminSubscriptionList,
   useSubscriptionWithQosHealth,
@@ -48,12 +51,21 @@ export default function CreateQosInstancePage() {
     number | null
   >(null);
 
-  // Fetch users and subscriptions
-  const { data: usersData } = useGetUserList({ page: 1, limit: 1000 });
-  const { data: subscriptionsData } = useGetAdminSubscriptionList({
+  // Fetch users, subscriptions, and existing QOS instances
+  const { data: usersData, isLoading: isLoadingUsers } = useGetUserList({
     page: 1,
     limit: 1000,
   });
+  const { data: subscriptionsData, isLoading: isLoadingSubscriptions } =
+    useGetAdminSubscriptionList({
+      page: 1,
+      limit: 1000,
+    });
+  const { data: qosInstancesData, isLoading: isLoadingQosInstances } =
+    useGetQosInstanceList({
+      page: 1,
+      limit: 1000,
+    });
 
   // Get QOS health info for selected subscription
   const { data: qosHealthData } = useSubscriptionWithQosHealth(
@@ -84,18 +96,31 @@ export default function CreateQosInstancePage() {
       selectedUserId ? sub.userId === selectedUserId : true
     ) || [];
 
-  // Filter subscriptions that don't have QOS instances yet
+  // Filter subscriptions that are PAID and don't have QOS instances yet
   const subscriptionsWithoutQos = availableSubscriptions.filter((sub) => {
-    // Only active subscriptions can have QOS instances
-    if (sub.status !== "ACTIVE") return false;
+    // Only PAID subscriptions can have QOS instances created
+    if (sub.status !== "PAID") return false;
 
     // Check if this subscription already has a QOS instance
-    // This would need to be checked via the qosHealthData or another API call
-    return true; // For now, show all ACTIVE subscriptions
+    const existingQosInstance = qosInstancesData?.payload?.data?.find(
+      (qos) => qos.subscriptionId === sub.id
+    );
+
+    if (existingQosInstance) {
+      return false; // Subscription already has QOS instance
+    }
+
+    return true; // PAID subscription without QOS instance
   });
 
   const onSubmit = async (data: CreateQosInstanceBodyType) => {
     if (addQosInstanceMutation.isPending) return;
+
+    // Check if subscription already has QOS instance
+    if (qosHealthData?.payload?.data?.qosInstance) {
+      toast.error("Subscription này đã có QOS instance. Không thể tạo thêm.");
+      return;
+    }
 
     // Basic validation
     if (!data.userId || data.userId <= 0) {
@@ -199,6 +224,62 @@ export default function CreateQosInstancePage() {
             Triển khai QR ordering system cho khách hàng
           </p>
         </div>
+
+        {/* Statistics Summary */}
+        {!isLoadingSubscriptions && !isLoadingQosInstances && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Thống kê hệ thống</CardTitle>
+              <CardDescription>
+                Tình trạng subscription và QOS instances
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-4">
+                <div className="text-center p-3 bg-blue-50 rounded-lg">
+                  <div className="text-2xl font-bold text-blue-600">
+                    {subscriptionsData?.payload?.data?.length || 0}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Tổng subscription
+                  </div>
+                </div>
+                <div className="text-center p-3 bg-green-50 rounded-lg">
+                  <div className="text-2xl font-bold text-green-600">
+                    {subscriptionsData?.payload?.data?.filter(
+                      (s) => s.status === "PAID"
+                    ).length || 0}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    PAID subscription
+                  </div>
+                </div>
+                <div className="text-center p-3 bg-purple-50 rounded-lg">
+                  <div className="text-2xl font-bold text-purple-600">
+                    {qosInstancesData?.payload?.data?.length || 0}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    QOS instances
+                  </div>
+                </div>
+                <div className="text-center p-3 bg-amber-50 rounded-lg">
+                  <div className="text-2xl font-bold text-amber-600">
+                    {Math.max(
+                      0,
+                      (subscriptionsData?.payload?.data?.filter(
+                        (s) => s.status === "PAID"
+                      ).length || 0) -
+                        (qosInstancesData?.payload?.data?.length || 0)
+                    )}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Có thể tạo mới
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -220,21 +301,39 @@ export default function CreateQosInstancePage() {
                 <Label htmlFor="userId">
                   Khách hàng <span className="text-destructive">*</span>
                 </Label>
-                <Select onValueChange={handleUserChange}>
+                <Select
+                  onValueChange={handleUserChange}
+                  disabled={isLoadingUsers}
+                >
                   <SelectTrigger>
-                    <SelectValue placeholder="Chọn khách hàng" />
+                    <SelectValue
+                      placeholder={
+                        isLoadingUsers
+                          ? "Đang tải khách hàng..."
+                          : "Chọn khách hàng"
+                      }
+                    />
                   </SelectTrigger>
                   <SelectContent>
-                    {usersData?.payload?.data?.map((user) => (
-                      <SelectItem key={user.id} value={user.id.toString()}>
-                        <div className="flex flex-col">
-                          <span>{user.name || user.email}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {user.email} • ID: {user.id}
-                          </span>
+                    {isLoadingUsers ? (
+                      <SelectItem value="loading" disabled>
+                        <div className="flex items-center gap-2">
+                          <IconLoader2 className="size-3 animate-spin" />
+                          Đang tải...
                         </div>
                       </SelectItem>
-                    ))}
+                    ) : (
+                      usersData?.payload?.data?.map((user) => (
+                        <SelectItem key={user.id} value={user.id.toString()}>
+                          <div className="flex flex-col">
+                            <span>{user.name || user.email}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {user.email} • ID: {user.id}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
                 {form.formState.errors.userId && (
@@ -251,14 +350,20 @@ export default function CreateQosInstancePage() {
                 </Label>
                 <Select
                   onValueChange={handleSubscriptionChange}
-                  disabled={!selectedUserId}
+                  disabled={
+                    !selectedUserId ||
+                    isLoadingSubscriptions ||
+                    isLoadingQosInstances
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue
                       placeholder={
-                        selectedUserId
-                          ? "Chọn subscription"
-                          : "Chọn khách hàng trước"
+                        !selectedUserId
+                          ? "Chọn khách hàng trước"
+                          : isLoadingSubscriptions || isLoadingQosInstances
+                            ? "Đang kiểm tra subscription..."
+                            : "Chọn subscription"
                       }
                     />
                   </SelectTrigger>
@@ -269,7 +374,12 @@ export default function CreateQosInstancePage() {
                         value={subscription.id.toString()}
                       >
                         <div className="flex flex-col">
-                          <span>{subscription.restaurantName}</span>
+                          <div className="flex items-center gap-2">
+                            <span>{subscription.restaurantName}</span>
+                            <span className="inline-flex items-center px-1.5 py-0.5 text-xs font-medium bg-green-100 text-green-800 rounded-md">
+                              PAID
+                            </span>
+                          </div>
                           <span className="text-xs text-muted-foreground">
                             {subscription.restaurantType} •{" "}
                             {subscription.servicePlan?.name}
@@ -284,71 +394,154 @@ export default function CreateQosInstancePage() {
                     {form.formState.errors.subscriptionId.message}
                   </p>
                 )}
-                {selectedUserId && subscriptionsWithoutQos.length === 0 && (
+                {selectedUserId && availableSubscriptions.length === 0 && (
                   <p className="text-sm text-muted-foreground">
-                    Khách hàng này không có subscription ACTIVE nào hoặc đã có
-                    QOS instance
+                    Khách hàng này không có subscription nào.
                   </p>
                 )}
+                {selectedUserId &&
+                  availableSubscriptions.length > 0 &&
+                  subscriptionsWithoutQos.length === 0 && (
+                    <div className="text-sm space-y-1">
+                      <p className="text-amber-600">
+                        ⚠️ Khách hàng này không có subscription PAID nào chưa có
+                        QOS instance.
+                      </p>
+                      <div className="text-xs text-muted-foreground">
+                        {availableSubscriptions.filter(
+                          (s) => s.status === "PAID"
+                        ).length > 0 ? (
+                          <p>
+                            • Có{" "}
+                            {
+                              availableSubscriptions.filter(
+                                (s) => s.status === "PAID"
+                              ).length
+                            }{" "}
+                            subscription PAID nhưng đã có QOS instance
+                          </p>
+                        ) : (
+                          <p>• Không có subscription PAID nào</p>
+                        )}
+                        {availableSubscriptions.filter(
+                          (s) => s.status !== "PAID"
+                        ).length > 0 && (
+                          <p>
+                            • Có{" "}
+                            {
+                              availableSubscriptions.filter(
+                                (s) => s.status !== "PAID"
+                              ).length
+                            }{" "}
+                            subscription khác (
+                            {availableSubscriptions
+                              .filter((s) => s.status !== "PAID")
+                              .map((s) => s.status)
+                              .join(", ")}
+                            )
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
               </div>
 
               {selectedSubscriptionId && qosHealthData?.payload && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-sm">
-                      Thông tin QOS hiện tại
+                      Kiểm tra QOS Instance
                     </CardTitle>
                     <CardDescription>
-                      Subscription này{" "}
-                      {qosHealthData.payload.data.qosInstance
-                        ? "đã có"
-                        : "chưa có"}{" "}
-                      QOS instance
+                      Kết quả kiểm tra cho subscription đã chọn
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     {qosHealthData.payload.data.qosInstance ? (
-                      <div className="space-y-2">
-                        <div className="text-sm text-amber-600">
-                          ⚠️ Subscription này đã có QOS instance (ID:{" "}
-                          {qosHealthData.payload.data.qosInstance.id})
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                          <span className="text-sm font-medium text-red-600">
+                            Subscription này đã có QOS instance
+                          </span>
                         </div>
-                        {qosHealthData.payload.data.healthCheck && (
-                          <div className="text-xs text-muted-foreground space-y-1">
-                            <div>
-                              •{" "}
-                              {qosHealthData.payload.data.healthCheck
-                                .amountUser || 0}{" "}
-                              users
-                            </div>
-                            <div>
-                              •{" "}
-                              {qosHealthData.payload.data.healthCheck
-                                .amountTable || 0}{" "}
-                              tables
-                            </div>
-                            <div>
-                              •{" "}
-                              {qosHealthData.payload.data.healthCheck
-                                .amountOrder || 0}{" "}
-                              orders
-                            </div>
-                            <div>
-                              •{" "}
-                              {qosHealthData.payload.data.healthCheck
-                                .usedStorage || "0 MB"}{" "}
-                              storage
-                            </div>
+                        <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                          <div className="text-sm space-y-1">
+                            <p>
+                              <strong>QOS Instance ID:</strong>{" "}
+                              {qosHealthData.payload.data.qosInstance.id}
+                            </p>
+                            {qosHealthData.payload.data.qosInstance
+                              .backEndUrl && (
+                              <p>
+                                <strong>Backend URL:</strong>{" "}
+                                {
+                                  qosHealthData.payload.data.qosInstance
+                                    .backEndUrl
+                                }
+                              </p>
+                            )}
+                            {qosHealthData.payload.data.qosInstance
+                              .frontEndUrl && (
+                              <p>
+                                <strong>Frontend URL:</strong>{" "}
+                                {
+                                  qosHealthData.payload.data.qosInstance
+                                    .frontEndUrl
+                                }
+                              </p>
+                            )}
                           </div>
-                        )}
-                        <div className="text-xs text-red-600">
-                          Tạo instance mới có thể gây xung đột dữ liệu.
+                          {qosHealthData.payload.data.healthCheck && (
+                            <div className="mt-2 text-xs text-muted-foreground space-y-1">
+                              <p className="font-medium">Thống kê hiện tại:</p>
+                              <div className="grid grid-cols-2 gap-1">
+                                <span>
+                                  • Users:{" "}
+                                  {qosHealthData.payload.data.healthCheck
+                                    .amountUser || 0}
+                                </span>
+                                <span>
+                                  • Tables:{" "}
+                                  {qosHealthData.payload.data.healthCheck
+                                    .amountTable || 0}
+                                </span>
+                                <span>
+                                  • Orders:{" "}
+                                  {qosHealthData.payload.data.healthCheck
+                                    .amountOrder || 0}
+                                </span>
+                                <span>
+                                  • Storage:{" "}
+                                  {qosHealthData.payload.data.healthCheck
+                                    .usedStorage || "0 MB"}
+                                </span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-xs text-red-600 font-medium">
+                          ⚠️ Tạo instance mới cho subscription này có thể gây
+                          xung đột dữ liệu và lỗi hệ thống.
                         </div>
                       </div>
                     ) : (
-                      <div className="text-sm text-green-600">
-                        ✅ Subscription này chưa có QOS instance, có thể tạo
-                        mới.
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span className="text-sm font-medium text-green-600">
+                            Subscription này chưa có QOS instance
+                          </span>
+                        </div>
+                        <div className="bg-green-50 border border-green-200 rounded-md p-3">
+                          <p className="text-sm text-green-700">
+                            ✅ Có thể tạo QOS instance mới cho subscription này.
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Hệ thống sẽ tạo database, triển khai
+                            frontend/backend và cấu hình monitoring.
+                          </p>
+                        </div>
                       </div>
                     )}
                   </CardContent>

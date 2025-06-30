@@ -56,6 +56,10 @@ export const QosHealthCheckSchema = z.object({
 export const QosInstanceRelationSchema = z.object({
   id: z.number(),
   backEndUrl: z.string().url().nullable(),
+  frontEndUrl: z.string().url().nullable(),
+  statusBE: z.enum(["ACTIVE", "DEPLOYING", "ERROR", "INACTIVE", "MAINTENANCE"]),
+  statusFE: z.enum(["ACTIVE", "DEPLOYING", "ERROR", "INACTIVE", "MAINTENANCE"]),
+  statusDb: z.enum(["ACTIVE", "DEPLOYING", "ERROR", "INACTIVE", "MAINTENANCE"])
 }).nullable();
 
 export const SubscriptionWithQosHealthSchema = SubscriptionSchema.extend({

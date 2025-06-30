@@ -29,12 +29,14 @@ interface QosHealthCardProps {
   subscriptionId: number;
   qosInstanceId?: number;
   compact?: boolean;
+  className?: string;
 }
 
 export function QosHealthCard({
   subscriptionId,
   qosInstanceId,
   compact = false,
+  className = "",
 }: QosHealthCardProps) {
   const { data, isLoading, error, refetch } = useGetSubscriptionQosHealth({
     id: subscriptionId,
@@ -168,22 +170,31 @@ export function QosHealthCard({
 
   if (compact) {
     return (
-      <Card className={healthStatus.bgColor}>
-        <CardContent className="pt-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <StatusIcon className={`size-4 ${healthStatus.color}`} />
-              <span className="text-sm font-medium">{healthStatus.label}</span>
-            </div>
-            {healthData && (
-              <div className="flex gap-4 text-xs text-muted-foreground">
-                <span>{healthData.amountUser || 0} users</span>
-                <span>{healthData.amountOrder || 0} orders</span>
-              </div>
-            )}
+      <div className={`rounded-lg p-3 ${healthStatus.bgColor} ${className}`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <StatusIcon className={`size-4 ${healthStatus.color}`} />
+            <span className="text-sm font-medium">{healthStatus.label}</span>
           </div>
-        </CardContent>
-      </Card>
+          {healthData && (
+            <div className="flex gap-3 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <IconUsers className="size-3" />
+                {healthData.amountUser || 0}
+              </span>
+              <span className="flex items-center gap-1">
+                <IconUserCheck className="size-3" />
+                {healthData.amountOrder || 0}
+              </span>
+            </div>
+          )}
+        </div>
+        {healthData && (
+          <div className="mt-2 text-xs text-muted-foreground">
+            Dung lượng: {parseStorageValue(healthData.usedStorage).raw}
+          </div>
+        )}
+      </div>
     );
   }
 
