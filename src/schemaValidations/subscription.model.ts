@@ -48,19 +48,39 @@ export const SubscriptionWithRelationsSchema = SubscriptionSchema.extend({
 // QOS Health Check Schema
 export const QosHealthCheckSchema = z.object({
   amountUser: z.number().nullable(),
-  amountTable: z.number().nullable(), 
+  amountTable: z.number().nullable(),
   amountOrder: z.number().nullable(),
   usedStorage: z.string().nullable(),
 });
 
-export const QosInstanceRelationSchema = z.object({
-  id: z.number(),
-  backEndUrl: z.string().url().nullable(),
-  frontEndUrl: z.string().url().nullable(),
-  statusBE: z.enum(["ACTIVE", "DEPLOYING", "ERROR", "INACTIVE", "MAINTENANCE"]),
-  statusFE: z.enum(["ACTIVE", "DEPLOYING", "ERROR", "INACTIVE", "MAINTENANCE"]),
-  statusDb: z.enum(["ACTIVE", "DEPLOYING", "ERROR", "INACTIVE", "MAINTENANCE"])
-}).nullable();
+export const QosInstanceRelationSchema = z
+  .object({
+    id: z.number(),
+    backEndUrl: z.string().url().nullable(),
+    frontEndUrl: z.string().url().nullable(),
+    statusBE: z.enum([
+      "ACTIVE",
+      "DEPLOYING",
+      "ERROR",
+      "INACTIVE",
+      "MAINTENANCE",
+    ]),
+    statusFE: z.enum([
+      "ACTIVE",
+      "DEPLOYING",
+      "ERROR",
+      "INACTIVE",
+      "MAINTENANCE",
+    ]),
+    statusDb: z.enum([
+      "ACTIVE",
+      "DEPLOYING",
+      "ERROR",
+      "INACTIVE",
+      "MAINTENANCE",
+    ]),
+  })
+  .nullable();
 
 export const SubscriptionWithQosHealthSchema = SubscriptionSchema.extend({
   qosInstance: QosInstanceRelationSchema,
@@ -94,30 +114,49 @@ export const GetSubscriptionDetailResSchema = z.object({
   message: z.string(),
 });
 
-export const CreateSubscriptionBodySchema = SubscriptionSchema
-  .pick({
-    restaurantName: true,
-    restaurantAddress: true,
-    restaurantPhone: true,
-    restaurantType: true,
-    description: true,
-    servicePlanId: true,
-    durationDays: true,
-  })
-  .strict();
+export const CreateSubscriptionBodySchema = SubscriptionSchema.pick({
+  userId: true,
+  restaurantName: true,
+  restaurantAddress: true,
+  restaurantPhone: true,
+  restaurantType: true,
+  description: true,
+  servicePlanId: true,
+  durationDays: true,
+}).strict();
 
-export const UpdateSubscriptionBodySchema = CreateSubscriptionBodySchema.partial();
+export const UpdateSubscriptionBodySchema = CreateSubscriptionBodySchema.extend(
+  {
+    startDate: SubscriptionSchema.shape.startDate.optional(),
+    endDate: SubscriptionSchema.shape.endDate.optional(),
+    status: SubscriptionSchema.shape.status.optional(),
+  }
+);
 
 export type SubscriptionType = z.infer<typeof SubscriptionSchema>;
-export type SubscriptionWithRelationsType = z.infer<typeof SubscriptionWithRelationsSchema>;
+export type SubscriptionWithRelationsType = z.infer<
+  typeof SubscriptionWithRelationsSchema
+>;
 export type QosHealthCheckType = z.infer<typeof QosHealthCheckSchema>;
-export type SubscriptionWithQosHealthType = z.infer<typeof SubscriptionWithQosHealthSchema>;
+export type SubscriptionWithQosHealthType = z.infer<
+  typeof SubscriptionWithQosHealthSchema
+>;
 export type GetSubscriptionsResType = z.infer<typeof GetSubscriptionsResSchema>;
-export type GetSubscriptionParamsType = z.infer<typeof GetSubscriptionParamsSchema>;
-export type GetSubscriptionDetailResType = z.infer<typeof GetSubscriptionDetailResSchema>;
-export type GetSubscriptionQosHealthResType = z.infer<typeof GetSubscriptionQosHealthResSchema>;
-export type CreateSubscriptionBodyType = z.infer<typeof CreateSubscriptionBodySchema>;
-export type UpdateSubscriptionBodyType = z.infer<typeof UpdateSubscriptionBodySchema>;
+export type GetSubscriptionParamsType = z.infer<
+  typeof GetSubscriptionParamsSchema
+>;
+export type GetSubscriptionDetailResType = z.infer<
+  typeof GetSubscriptionDetailResSchema
+>;
+export type GetSubscriptionQosHealthResType = z.infer<
+  typeof GetSubscriptionQosHealthResSchema
+>;
+export type CreateSubscriptionBodyType = z.infer<
+  typeof CreateSubscriptionBodySchema
+>;
+export type UpdateSubscriptionBodyType = z.infer<
+  typeof UpdateSubscriptionBodySchema
+>;
 
 // Duration options for UI
 export const DurationOptions = [
