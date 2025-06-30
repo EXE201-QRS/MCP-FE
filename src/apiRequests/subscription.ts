@@ -2,6 +2,7 @@ import http from "@/lib/http";
 import {
   CreateSubscriptionBodyType,
   GetSubscriptionDetailResType,
+  GetSubscriptionQosHealthResType,
   GetSubscriptionsResType,
   UpdateSubscriptionBodyType,
 } from "@/schemaValidations/subscription.model";
@@ -19,6 +20,8 @@ const subscriptionApiRequests = {
     http.put<GetSubscriptionDetailResType>(`${prefix}/${id}`, body),
   getSubscription: (id: number) =>
     http.get<GetSubscriptionDetailResType>(`${prefix}/${id}`),
+  getQosHealth: (id: number) =>
+    http.get<GetSubscriptionQosHealthResType>(`${prefix}/${id}/qos-health`),
   deleteSubscription: (id: number) => http.delete(`${prefix}/${id}`),
 };
 
