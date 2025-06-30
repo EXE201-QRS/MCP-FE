@@ -45,6 +45,34 @@ export const SubscriptionWithRelationsSchema = SubscriptionSchema.extend({
   servicePlan: ServicePlanRelationSchema,
 });
 
+// QOS Health Check Schema
+export const QosHealthCheckSchema = z.object({
+  amountUser: z.number().nullable(),
+  amountTable: z.number().nullable(), 
+  amountOrder: z.number().nullable(),
+  usedStorage: z.string().nullable(),
+});
+
+export const QosInstanceRelationSchema = z.object({
+  id: z.number(),
+  backEndUrl: z.string().url().nullable(),
+  frontEndUrl: z.string().url().nullable(),
+  statusBE: z.enum(["ACTIVE", "DEPLOYING", "ERROR", "INACTIVE", "MAINTENANCE"]),
+  statusFE: z.enum(["ACTIVE", "DEPLOYING", "ERROR", "INACTIVE", "MAINTENANCE"]),
+  statusDb: z.enum(["ACTIVE", "DEPLOYING", "ERROR", "INACTIVE", "MAINTENANCE"])
+}).nullable();
+
+export const SubscriptionWithQosHealthSchema = SubscriptionSchema.extend({
+  qosInstance: QosInstanceRelationSchema,
+  servicePlan: ServicePlanRelationSchema,
+  healthCheck: QosHealthCheckSchema.nullable(),
+});
+
+export const GetSubscriptionQosHealthResSchema = z.object({
+  data: SubscriptionWithQosHealthSchema,
+  message: z.string(),
+});
+
 // List subscriptions - includes user and servicePlan
 export const GetSubscriptionsResSchema = z.object({
   data: z.array(SubscriptionWithRelationsSchema),
@@ -82,9 +110,12 @@ export const UpdateSubscriptionBodySchema = CreateSubscriptionBodySchema.partial
 
 export type SubscriptionType = z.infer<typeof SubscriptionSchema>;
 export type SubscriptionWithRelationsType = z.infer<typeof SubscriptionWithRelationsSchema>;
+export type QosHealthCheckType = z.infer<typeof QosHealthCheckSchema>;
+export type SubscriptionWithQosHealthType = z.infer<typeof SubscriptionWithQosHealthSchema>;
 export type GetSubscriptionsResType = z.infer<typeof GetSubscriptionsResSchema>;
 export type GetSubscriptionParamsType = z.infer<typeof GetSubscriptionParamsSchema>;
 export type GetSubscriptionDetailResType = z.infer<typeof GetSubscriptionDetailResSchema>;
+export type GetSubscriptionQosHealthResType = z.infer<typeof GetSubscriptionQosHealthResSchema>;
 export type CreateSubscriptionBodyType = z.infer<typeof CreateSubscriptionBodySchema>;
 export type UpdateSubscriptionBodyType = z.infer<typeof UpdateSubscriptionBodySchema>;
 

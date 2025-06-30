@@ -1,7 +1,11 @@
 "use client";
 
+import { QosHealthCard } from "@/components/qos-health/QosHealthCard";
+import {
+  OverallServiceStatus,
+  ServiceStatusIndicator,
+} from "@/components/qos-status";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -32,10 +36,8 @@ import {
 } from "@/hooks/useQosInstance";
 import { handleErrorApi } from "@/lib/utils";
 import {
-  IconActivity,
   IconAlertTriangle,
   IconCheck,
-  IconClock,
   IconDatabase,
   IconDots,
   IconEdit,
@@ -43,12 +45,9 @@ import {
   IconLoader,
   IconPlus,
   IconSearch,
-  IconServer,
   IconTrash,
   IconX,
 } from "@tabler/icons-react";
-import { format } from "date-fns";
-import { vi } from "date-fns/locale";
 import { Wrench } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -120,32 +119,6 @@ export default function QosInstancesPage() {
       .join("")
       .toUpperCase()
       .slice(0, 2);
-  };
-
-  const getOverallStatus = (instance: any) => {
-    const statuses = [instance.statusDb, instance.statusFE, instance.statusBE];
-
-    if (statuses.includes(QosInstanceStatus.ERROR))
-      return QosInstanceStatus.ERROR;
-    if (statuses.includes(QosInstanceStatus.DEPLOYING))
-      return QosInstanceStatus.DEPLOYING;
-    if (statuses.includes(QosInstanceStatus.MAINTENANCE))
-      return QosInstanceStatus.MAINTENANCE;
-    if (statuses.every((s) => s === QosInstanceStatus.ACTIVE))
-      return QosInstanceStatus.ACTIVE;
-    return QosInstanceStatus.INACTIVE;
-  };
-
-  const StatusBadge = ({ status }: { status: keyof typeof statusConfig }) => {
-    const config = statusConfig[status];
-    const IconComponent = config.icon;
-
-    return (
-      <Badge variant={config.variant} className="gap-1">
-        <IconComponent className={`size-3 ${config.color}`} />
-        {config.label}
-      </Badge>
-    );
   };
 
   const formatBytes = (bytes: number | null) => {
@@ -265,17 +238,15 @@ export default function QosInstancesPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nhà hàng & Khách hàng</TableHead>
-                    <TableHead>Database</TableHead>
-                    <TableHead>Trạng thái Services</TableHead>
-                    <TableHead>Performance</TableHead>
-                    <TableHead>Triển khai</TableHead>
+                    <TableHead>Trạng thái tổng quan</TableHead>
+                    <TableHead>Frontend Service</TableHead>
+                    <TableHead>Backend Service</TableHead>
+                    <TableHead>Health Metrics</TableHead>
                     <TableHead className="w-[70px]">Thao tác</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredInstances.map((instance) => {
-                    const overallStatus = getOverallStatus(instance);
-
                     return (
                       <TableRow key={instance.id}>
                         <TableCell>
@@ -303,90 +274,36 @@ export default function QosInstancesPage() {
                         </TableCell>
 
                         <TableCell>
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              <IconDatabase className="size-3" />
-                              <span className="text-sm font-mono">
-                                {instance.dbName || "Chưa cấu hình"}
-                              </span>
-                            </div>
-                            <StatusBadge status={instance.statusDb} />
-                            {instance.dbSize && (
-                              <div className="text-xs text-muted-foreground">
-                                {formatBytes(instance.dbSize)}
-                              </div>
-                            )}
-                          </div>
+                          <OverallServiceStatus
+                            subscriptionId={instance.subscription.id}
+                            compact={true}
+                          />
                         </TableCell>
 
                         <TableCell>
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-2">
-                              <IconServer className="size-3" />
-                              <span className="text-xs">FE:</span>
-                              <StatusBadge status={instance.statusFE} />
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <IconServer className="size-3" />
-                              <span className="text-xs">BE:</span>
-                              <StatusBadge status={instance.statusBE} />
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              Tổng quan: <StatusBadge status={overallStatus} />
-                            </div>
-                          </div>
+                          <ServiceStatusIndicator
+                            subscriptionId={instance.subscription.id}
+                            service="frontend"
+                            showUrl={false}
+                            compact={false}
+                          />
                         </TableCell>
 
                         <TableCell>
-                          <div className="space-y-1">
-                            {instance.responseTime && (
-                              <div className="flex items-center gap-2">
-                                <IconActivity className="size-3" />
-                                <span className="text-xs">
-                                  {instance.responseTime}ms
-                                </span>
-                              </div>
-                            )}
-                            {instance.uptime && (
-                              <div className="flex items-center gap-2">
-                                <IconClock className="size-3" />
-                                <span className="text-xs">
-                                  {instance.uptime.toFixed(1)}%
-                                </span>
-                              </div>
-                            )}
-                            {instance.lastPing && (
-                              <div className="text-xs text-muted-foreground">
-                                Ping:{" "}
-                                {format(new Date(instance.lastPing), "HH:mm", {
-                                  locale: vi,
-                                })}
-                              </div>
-                            )}
-                          </div>
+                          <ServiceStatusIndicator
+                            subscriptionId={instance.subscription.id}
+                            service="backend"
+                            showUrl={false}
+                            compact={false}
+                          />
                         </TableCell>
 
                         <TableCell>
-                          <div className="space-y-1">
-                            {instance.version && (
-                              <div className="text-xs font-mono">
-                                v{instance.version}
-                              </div>
-                            )}
-                            {instance.deployedAt ? (
-                              <div className="text-xs text-muted-foreground">
-                                {format(
-                                  new Date(instance.deployedAt),
-                                  "dd/MM/yyyy",
-                                  { locale: vi }
-                                )}
-                              </div>
-                            ) : (
-                              <Badge variant="outline" className="text-xs">
-                                Chưa triển khai
-                              </Badge>
-                            )}
-                          </div>
+                          <QosHealthCard
+                            subscriptionId={instance.subscription.id}
+                            qosInstanceId={instance.id}
+                            compact={true}
+                          />
                         </TableCell>
 
                         <TableCell>
@@ -441,7 +358,7 @@ export default function QosInstancesPage() {
           {data?.payload && data.payload.totalPages > 1 && (
             <div className="flex items-center justify-between pt-4">
               <div className="text-sm text-muted-foreground">
-                Trang {data.payload.page} / {data.payload.totalPages}(
+                Trang {data.payload.page} / {data.payload.totalPages} (
                 {data.payload.totalItems} instances)
               </div>
               <div className="flex gap-2">

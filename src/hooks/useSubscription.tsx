@@ -37,6 +37,30 @@ export const useGetSubscription = ({
   });
 };
 
+// Hook to get QOS health for a subscription - useful for create/edit forms
+export const useSubscriptionWithQosHealth = (subscriptionId: number) => {
+  return useQuery({
+    queryKey: ["subscription-with-qos", subscriptionId],
+    queryFn: () => subscriptionApiRequests.getQosHealth(subscriptionId),
+    enabled: !!subscriptionId,
+  });
+};
+
+export const useGetSubscriptionQosHealth = ({
+  id,
+  enabled = true,
+}: {
+  id: number;
+  enabled?: boolean;
+}) => {
+  return useQuery({
+    queryKey: ["subscription-qos-health", id],
+    queryFn: () => subscriptionApiRequests.getQosHealth(id),
+    enabled: enabled && !!id,
+    refetchInterval: 30000, // Refetch every 30 seconds for real-time data
+  });
+};
+
 // Single subscription hook (without enabled parameter)
 export const useSubscription = (id: number) => {
   return useQuery({
