@@ -25,6 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { QosHealthCard } from "@/components/qos-health/QosHealthCard";
 import { QosInstanceStatus } from "@/constants/qos-instance.constant";
 import {
   useDeleteQosInstanceMutation,
@@ -335,6 +336,14 @@ export default function QosInstancesPage() {
                               Tổng quan: <StatusBadge status={overallStatus} />
                             </div>
                           </div>
+                        </TableCell>
+
+                        <TableCell>
+                          <QosHealthCard 
+                            subscriptionId={instance.subscription.id}
+                            qosInstanceId={instance.id}
+                            compact={true}
+                          />
                         </TableCell>
 
                         <TableCell>

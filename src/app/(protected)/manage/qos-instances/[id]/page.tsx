@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
+import { QosHealthCard } from "@/components/qos-health/QosHealthCard";
 import { QosInstanceStatus } from "@/constants/qos-instance.constant";
 import { useGetQosInstance } from "@/hooks/useQosInstance";
 import {
@@ -446,6 +447,12 @@ export default function QosInstanceDetailPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* QOS Health Check - Real-time Data */}
+          <QosHealthCard 
+            subscriptionId={instance.subscriptionId}
+            qosInstanceId={instance.id}
+          />
 
           {/* Performance Metrics */}
           <Card>

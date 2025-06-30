@@ -20,7 +20,10 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { QosInstanceStatus } from "@/constants/qos-instance.constant";
 import { useAddQosInstanceMutation } from "@/hooks/useQosInstance";
-import { useGetAdminSubscriptionList } from "@/hooks/useSubscription";
+import {
+  useGetAdminSubscriptionList,
+  useSubscriptionWithQosHealth,
+} from "@/hooks/useSubscription";
 import { useGetUserList } from "@/hooks/useUser";
 import { handleErrorApi } from "@/lib/utils";
 import { CreateQosInstanceBodyType } from "@/schemaValidations/qos-instance.model";
@@ -41,10 +44,21 @@ export default function CreateQosInstancePage() {
   const router = useRouter();
   const addQosInstanceMutation = useAddQosInstanceMutation();
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [selectedSubscriptionId, setSelectedSubscriptionId] = useState<
+    number | null
+  >(null);
 
   // Fetch users and subscriptions
   const { data: usersData } = useGetUserList({ page: 1, limit: 1000 });
-  const { data: subscriptionsData } = useGetAdminSubscriptionList({ page: 1, limit: 1000 });
+  const { data: subscriptionsData } = useGetAdminSubscriptionList({
+    page: 1,
+    limit: 1000,
+  });
+
+  // Get QOS health info for selected subscription
+  const { data: qosHealthData } = useSubscriptionWithQosHealth(
+    selectedSubscriptionId || 0
+  );
 
   const form = useForm<CreateQosInstanceBodyType>({
     defaultValues: {
@@ -65,14 +79,20 @@ export default function CreateQosInstancePage() {
   });
 
   // Filter subscriptions by selected user
-  const availableSubscriptions = subscriptionsData?.payload?.data?.filter(
-    (sub) => selectedUserId ? sub.userId === selectedUserId : true
-  ) || [];
+  const availableSubscriptions =
+    subscriptionsData?.payload?.data?.filter((sub) =>
+      selectedUserId ? sub.userId === selectedUserId : true
+    ) || [];
 
   // Filter subscriptions that don't have QOS instances yet
-  const subscriptionsWithoutQos = availableSubscriptions.filter(
-    (sub) => sub.status === 'ACTIVE' // Only active subscriptions can have QOS instances
-  );
+  const subscriptionsWithoutQos = availableSubscriptions.filter((sub) => {
+    // Only active subscriptions can have QOS instances
+    if (sub.status !== "ACTIVE") return false;
+
+    // Check if this subscription already has a QOS instance
+    // This would need to be checked via the qosHealthData or another API call
+    return true; // For now, show all ACTIVE subscriptions
+  });
 
   const onSubmit = async (data: CreateQosInstanceBodyType) => {
     if (addQosInstanceMutation.isPending) return;
@@ -152,6 +172,13 @@ export default function CreateQosInstancePage() {
     setSelectedUserId(userIdNum);
     form.setValue("userId", userIdNum);
     form.setValue("subscriptionId", 0); // Reset subscription when user changes
+    setSelectedSubscriptionId(null); // Reset selected subscription
+  };
+
+  const handleSubscriptionChange = (subscriptionId: string) => {
+    const subIdNum = Number(subscriptionId);
+    form.setValue("subscriptionId", subIdNum);
+    setSelectedSubscriptionId(subIdNum);
   };
 
   return (
@@ -222,22 +249,30 @@ export default function CreateQosInstancePage() {
                 <Label htmlFor="subscriptionId">
                   Subscription <span className="text-destructive">*</span>
                 </Label>
-                <Select 
-                  onValueChange={(value) => form.setValue("subscriptionId", Number(value))}
+                <Select
+                  onValueChange={handleSubscriptionChange}
                   disabled={!selectedUserId}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder={
-                      selectedUserId ? "Chọn subscription" : "Chọn khách hàng trước"
-                    } />
+                    <SelectValue
+                      placeholder={
+                        selectedUserId
+                          ? "Chọn subscription"
+                          : "Chọn khách hàng trước"
+                      }
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {subscriptionsWithoutQos.map((subscription) => (
-                      <SelectItem key={subscription.id} value={subscription.id.toString()}>
+                      <SelectItem
+                        key={subscription.id}
+                        value={subscription.id.toString()}
+                      >
                         <div className="flex flex-col">
                           <span>{subscription.restaurantName}</span>
                           <span className="text-xs text-muted-foreground">
-                            {subscription.restaurantType} • {subscription.servicePlan?.name}
+                            {subscription.restaurantType} •{" "}
+                            {subscription.servicePlan?.name}
                           </span>
                         </div>
                       </SelectItem>
@@ -251,10 +286,74 @@ export default function CreateQosInstancePage() {
                 )}
                 {selectedUserId && subscriptionsWithoutQos.length === 0 && (
                   <p className="text-sm text-muted-foreground">
-                    Khách hàng này không có subscription ACTIVE nào hoặc đã có QOS instance
+                    Khách hàng này không có subscription ACTIVE nào hoặc đã có
+                    QOS instance
                   </p>
                 )}
               </div>
+
+              {selectedSubscriptionId && qosHealthData?.payload && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm">
+                      Thông tin QOS hiện tại
+                    </CardTitle>
+                    <CardDescription>
+                      Subscription này{" "}
+                      {qosHealthData.payload.data.qosInstance
+                        ? "đã có"
+                        : "chưa có"}{" "}
+                      QOS instance
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {qosHealthData.payload.data.qosInstance ? (
+                      <div className="space-y-2">
+                        <div className="text-sm text-amber-600">
+                          ⚠️ Subscription này đã có QOS instance (ID:{" "}
+                          {qosHealthData.payload.data.qosInstance.id})
+                        </div>
+                        {qosHealthData.payload.data.healthCheck && (
+                          <div className="text-xs text-muted-foreground space-y-1">
+                            <div>
+                              •{" "}
+                              {qosHealthData.payload.data.healthCheck
+                                .amountUser || 0}{" "}
+                              users
+                            </div>
+                            <div>
+                              •{" "}
+                              {qosHealthData.payload.data.healthCheck
+                                .amountTable || 0}{" "}
+                              tables
+                            </div>
+                            <div>
+                              •{" "}
+                              {qosHealthData.payload.data.healthCheck
+                                .amountOrder || 0}{" "}
+                              orders
+                            </div>
+                            <div>
+                              •{" "}
+                              {qosHealthData.payload.data.healthCheck
+                                .usedStorage || "0 MB"}{" "}
+                              storage
+                            </div>
+                          </div>
+                        )}
+                        <div className="text-xs text-red-600">
+                          Tạo instance mới có thể gây xung đột dữ liệu.
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-sm text-green-600">
+                        ✅ Subscription này chưa có QOS instance, có thể tạo
+                        mới.
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Version */}
               <div className="space-y-2">
@@ -278,9 +377,7 @@ export default function CreateQosInstancePage() {
                 <IconDatabase className="size-5" />
                 Cấu hình Database
               </CardTitle>
-              <CardDescription>
-                Thiết lập database cho instance
-              </CardDescription>
+              <CardDescription>Thiết lập database cho instance</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Database Name */}
@@ -299,18 +396,28 @@ export default function CreateQosInstancePage() {
               {/* Database Status */}
               <div className="space-y-2">
                 <Label htmlFor="statusDb">Trạng thái Database</Label>
-                <Select 
+                <Select
                   defaultValue={QosInstanceStatus.INACTIVE}
-                  onValueChange={(value) => form.setValue("statusDb", value as any)}
+                  onValueChange={(value) =>
+                    form.setValue("statusDb", value as any)
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={QosInstanceStatus.INACTIVE}>Không hoạt động</SelectItem>
-                    <SelectItem value={QosInstanceStatus.ACTIVE}>Hoạt động</SelectItem>
-                    <SelectItem value={QosInstanceStatus.MAINTENANCE}>Bảo trì</SelectItem>
-                    <SelectItem value={QosInstanceStatus.DEPLOYING}>Đang triển khai</SelectItem>
+                    <SelectItem value={QosInstanceStatus.INACTIVE}>
+                      Không hoạt động
+                    </SelectItem>
+                    <SelectItem value={QosInstanceStatus.ACTIVE}>
+                      Hoạt động
+                    </SelectItem>
+                    <SelectItem value={QosInstanceStatus.MAINTENANCE}>
+                      Bảo trì
+                    </SelectItem>
+                    <SelectItem value={QosInstanceStatus.DEPLOYING}>
+                      Đang triển khai
+                    </SelectItem>
                     <SelectItem value={QosInstanceStatus.ERROR}>Lỗi</SelectItem>
                   </SelectContent>
                 </Select>
@@ -350,7 +457,7 @@ export default function CreateQosInstancePage() {
               {/* Frontend Configuration */}
               <div className="space-y-4">
                 <h4 className="font-medium">Frontend</h4>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="frontEndUrl">URL Frontend</Label>
                   <Input
@@ -368,19 +475,31 @@ export default function CreateQosInstancePage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="statusFE">Trạng thái Frontend</Label>
-                  <Select 
+                  <Select
                     defaultValue={QosInstanceStatus.INACTIVE}
-                    onValueChange={(value) => form.setValue("statusFE", value as any)}
+                    onValueChange={(value) =>
+                      form.setValue("statusFE", value as any)
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={QosInstanceStatus.INACTIVE}>Không hoạt động</SelectItem>
-                      <SelectItem value={QosInstanceStatus.ACTIVE}>Hoạt động</SelectItem>
-                      <SelectItem value={QosInstanceStatus.MAINTENANCE}>Bảo trì</SelectItem>
-                      <SelectItem value={QosInstanceStatus.DEPLOYING}>Đang triển khai</SelectItem>
-                      <SelectItem value={QosInstanceStatus.ERROR}>Lỗi</SelectItem>
+                      <SelectItem value={QosInstanceStatus.INACTIVE}>
+                        Không hoạt động
+                      </SelectItem>
+                      <SelectItem value={QosInstanceStatus.ACTIVE}>
+                        Hoạt động
+                      </SelectItem>
+                      <SelectItem value={QosInstanceStatus.MAINTENANCE}>
+                        Bảo trì
+                      </SelectItem>
+                      <SelectItem value={QosInstanceStatus.DEPLOYING}>
+                        Đang triển khai
+                      </SelectItem>
+                      <SelectItem value={QosInstanceStatus.ERROR}>
+                        Lỗi
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -389,7 +508,7 @@ export default function CreateQosInstancePage() {
               {/* Backend Configuration */}
               <div className="space-y-4">
                 <h4 className="font-medium">Backend</h4>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="backEndUrl">URL Backend</Label>
                   <Input
@@ -407,19 +526,31 @@ export default function CreateQosInstancePage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="statusBE">Trạng thái Backend</Label>
-                  <Select 
+                  <Select
                     defaultValue={QosInstanceStatus.INACTIVE}
-                    onValueChange={(value) => form.setValue("statusBE", value as any)}
+                    onValueChange={(value) =>
+                      form.setValue("statusBE", value as any)
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={QosInstanceStatus.INACTIVE}>Không hoạt động</SelectItem>
-                      <SelectItem value={QosInstanceStatus.ACTIVE}>Hoạt động</SelectItem>
-                      <SelectItem value={QosInstanceStatus.MAINTENANCE}>Bảo trì</SelectItem>
-                      <SelectItem value={QosInstanceStatus.DEPLOYING}>Đang triển khai</SelectItem>
-                      <SelectItem value={QosInstanceStatus.ERROR}>Lỗi</SelectItem>
+                      <SelectItem value={QosInstanceStatus.INACTIVE}>
+                        Không hoạt động
+                      </SelectItem>
+                      <SelectItem value={QosInstanceStatus.ACTIVE}>
+                        Hoạt động
+                      </SelectItem>
+                      <SelectItem value={QosInstanceStatus.MAINTENANCE}>
+                        Bảo trì
+                      </SelectItem>
+                      <SelectItem value={QosInstanceStatus.DEPLOYING}>
+                        Đang triển khai
+                      </SelectItem>
+                      <SelectItem value={QosInstanceStatus.ERROR}>
+                        Lỗi
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
