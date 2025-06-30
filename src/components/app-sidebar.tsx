@@ -1,16 +1,10 @@
 "use client";
 
 import {
-  IconCamera,
   IconClipboardList,
   IconCreditCard,
   IconDashboard,
   IconDatabase,
-  IconFileAi,
-  IconFileDescription,
-  IconFileText,
-  IconFileWord,
-  IconHelp,
   IconInnerShadowTop,
   IconPackages,
   IconReport,
@@ -22,6 +16,7 @@ import {
 } from "@tabler/icons-react";
 import * as React from "react";
 
+import { NavClouds } from "@/components/nav-clouds";
 import { NavDocuments } from "@/components/nav-documents";
 import { NavMain } from "@/components/nav-main";
 import { NavSecondary } from "@/components/nav-secondary";
@@ -56,86 +51,51 @@ const data = {
       icon: IconPackages,
     },
     {
-      title: "Quản lý đăng ký", // Subscriptions Management
-      url: "/manage/subscriptions",
-      icon: IconClipboardList,
-    },
-    {
-      title: "Quản lý thanh toán", // Payments Management
-      url: "/manage/payments",
-      icon: IconCreditCard,
-    },
-    {
       title: "Quản lý khách hàng", // Quản lý khách hàng
       url: "/manage/customers",
       icon: IconUserCheck,
     },
-    {
-      title: "Quản lý QOS instances", // Quản lý QOS instances
-      url: "/manage/qos-instances",
-      icon: IconDatabase,
-    },
-    {
-      title: "Quản lý reviews", // Quản lý reviews
-      url: "/manage/reviews",
-      icon: IconStar,
-    },
-
-    {
-      title: "Quản lý blog", // Quản lý blog
-      url: "/manage/blog",
-      icon: IconFileText,
-    },
-    {
-      title: "Leads", // Quản lý leads
-      url: "/manage/leads",
-      icon: IconTarget,
-    },
   ],
   navClouds: [
     {
-      title: "Capture",
-      icon: IconCamera,
+      title: "Quản lý đăng ký",
+      icon: IconClipboardList,
       isActive: true,
-      url: "#",
+      url: "/manage/subscriptions",
       items: [
         {
-          title: "Active Proposals",
-          url: "#",
+          title: "Danh sách đăng ký",
+          url: "/manage/subscriptions",
         },
+        // {
+        //   title: "Đăng ký đã lưu trữ",
+        //   url: "/manage/subscriptions/archived",
+        // },
+      ],
+    },
+    {
+      title: "Quản lý thanh toán",
+      icon: IconCreditCard,
+      url: "/manage/payments",
+      items: [
         {
-          title: "Archived",
-          url: "#",
+          title: "Danh sách thanh toán",
+          url: "/manage/payments",
         },
       ],
     },
     {
-      title: "Proposal",
-      icon: IconFileDescription,
-      url: "#",
+      title: "Quản lý QOS instances",
+      icon: IconDatabase,
+      url: "/manage/qos-instances",
       items: [
         {
-          title: "Active Proposals",
-          url: "#",
+          title: "Danh sách QOS instances",
+          url: "/manage/qos-instances",
         },
         {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Prompts",
-      icon: IconFileAi,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
+          title: "Tạo QOS instance",
+          url: "/manage/qos-instances/create",
         },
       ],
     },
@@ -143,35 +103,30 @@ const data = {
   navSecondary: [
     {
       title: "Settings",
-      url: "#",
+      url: "/manage/settings",
       icon: IconSettings,
     },
     {
-      title: "Get Help",
-      url: "#",
-      icon: IconHelp,
-    },
-    {
       title: "Search",
-      url: "#",
+      url: "/manage/search",
       icon: IconSearch,
     },
   ],
   documents: [
     {
-      name: "Data Library",
-      url: "#",
-      icon: IconDatabase,
+      name: "Quản lý đánh giá",
+      url: "/manage/reviews",
+      icon: IconStar,
     },
     {
-      name: "Reports",
-      url: "#",
+      name: "Quản lý bài viết",
+      url: "/manage/blogs",
       icon: IconReport,
     },
     {
-      name: "Word Assistant",
-      url: "#",
-      icon: IconFileWord,
+      name: "Quản lý tài liệu", // Document Management
+      url: "/manage/leads",
+      icon: IconTarget,
     },
   ],
 };
@@ -203,6 +158,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
+        <NavClouds items={data.navClouds} />
         <NavDocuments items={data.documents} />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>

@@ -9,7 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import {
   Select,
   SelectContent,
@@ -17,20 +16,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useSubscription } from "@/hooks/useSubscription";
+import { Separator } from "@/components/ui/separator";
+import {
+  useSubscription,
+  useUpdateSubscriptionMutation,
+} from "@/hooks/useSubscription";
 import {
   IconArrowLeft,
   IconBuildingStore,
   IconCalendar,
   IconCreditCard,
+  IconEdit,
+  IconHistory,
   IconMail,
   IconMapPin,
   IconPackages,
   IconPhone,
   IconUser,
-  IconHistory,
-  IconEdit,
-  IconTrash,
 } from "@tabler/icons-react";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
@@ -41,37 +43,41 @@ import { toast } from "sonner";
 
 const getStatusBadge = (status: string) => {
   const statusConfig = {
-    PENDING: { 
-      label: "Chờ thanh toán", 
+    PENDING: {
+      label: "Chờ thanh toán",
       variant: "secondary" as const,
-      className: "bg-yellow-500/10 text-yellow-700 border-yellow-200 dark:text-yellow-400"
+      className:
+        "bg-yellow-500/10 text-yellow-700 border-yellow-200 dark:text-yellow-400",
     },
-    PAID: { 
-      label: "Đã thanh toán", 
+    PAID: {
+      label: "Đã thanh toán",
       variant: "default" as const,
-      className: "bg-green-500/10 text-green-700 border-green-200 dark:text-green-400"
+      className:
+        "bg-green-500/10 text-green-700 border-green-200 dark:text-green-400",
     },
-    ACTIVE: { 
-      label: "Đang hoạt động", 
+    ACTIVE: {
+      label: "Đang hoạt động",
       variant: "default" as const,
-      className: "bg-blue-500/10 text-blue-700 border-blue-200 dark:text-blue-400"
+      className:
+        "bg-blue-500/10 text-blue-700 border-blue-200 dark:text-blue-400",
     },
-    EXPIRED: { 
-      label: "Hết hạn", 
+    EXPIRED: {
+      label: "Hết hạn",
       variant: "destructive" as const,
-      className: "bg-red-500/10 text-red-700 border-red-200 dark:text-red-400"
+      className: "bg-red-500/10 text-red-700 border-red-200 dark:text-red-400",
     },
-    CANCELLED: { 
-      label: "Đã hủy", 
+    CANCELLED: {
+      label: "Đã hủy",
       variant: "destructive" as const,
-      className: "bg-gray-500/10 text-gray-700 border-gray-200 dark:text-gray-400"
+      className:
+        "bg-gray-500/10 text-gray-700 border-gray-200 dark:text-gray-400",
     },
   };
 
   const config = statusConfig[status as keyof typeof statusConfig] || {
     label: status,
     variant: "secondary" as const,
-    className: ""
+    className: "",
   };
 
   return (
@@ -85,11 +91,15 @@ export default function AdminSubscriptionDetailPage() {
   const params = useParams();
   const router = useRouter();
   const subscriptionId = parseInt(params.id as string);
-  
+  const updateMutation = useUpdateSubscriptionMutation();
   const [newStatus, setNewStatus] = useState<string>("");
   const [isUpdating, setIsUpdating] = useState(false);
 
-  const { data: subscription, isLoading, refetch } = useSubscription(subscriptionId);
+  const {
+    data: subscription,
+    isLoading,
+    refetch,
+  } = useSubscription(subscriptionId);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("vi-VN", {
@@ -100,13 +110,32 @@ export default function AdminSubscriptionDetailPage() {
 
   const handleStatusUpdate = async () => {
     if (!newStatus || !subscription) return;
-    
+
     setIsUpdating(true);
+    
+    // Only send the fields that are allowed in UpdateSubscriptionBodyType
+    const updateData = {
+      userId: subscription.payload.data.userId,
+      restaurantName: subscription.payload.data.restaurantName,
+      restaurantAddress: subscription.payload.data.restaurantAddress,
+      restaurantPhone: subscription.payload.data.restaurantPhone,
+      restaurantType: subscription.payload.data.restaurantType,
+      description: subscription.payload.data.description,
+      servicePlanId: subscription.payload.data.servicePlanId,
+      durationDays: subscription.payload.data.durationDays,
+      startDate: subscription.payload.data.startDate ? new Date(subscription.payload.data.startDate) : null,
+      endDate: subscription.payload.data.endDate ? new Date(subscription.payload.data.endDate) : null,
+      ...(newStatus && { status: newStatus as "PENDING" | "PAID" | "ACTIVE" | "EXPIRED" | "CANCELLED" }), // Only include status if it's being updated
+    };
+    
     try {
-      // Here you would call an API to update the subscription status
-      // await updateSubscriptionStatus(subscriptionId, newStatus);
+      await updateMutation.mutateAsync({
+        ...updateData,
+        id: subscriptionId,
+      });
       toast.success("Cập nhật trạng thái thành công");
-      refetch();
+      // No need to call refetch() anymore, React Query will auto-invalidate
+      router.push("/manage/subscriptions");
     } catch (error) {
       toast.error("Có lỗi xảy ra khi cập nhật trạng thái");
     } finally {
@@ -132,9 +161,7 @@ export default function AdminSubscriptionDetailPage() {
     return (
       <div className="space-y-6 p-6">
         <div className="text-center py-12">
-          <h3 className="text-lg font-semibold mb-2">
-            Không tìm thấy đăng ký
-          </h3>
+          <h3 className="text-lg font-semibold mb-2">Không tìm thấy đăng ký</h3>
           <p className="text-muted-foreground mb-6">
             Đăng ký dịch vụ với ID {subscriptionId} không tồn tại
           </p>
@@ -190,7 +217,9 @@ export default function AdminSubscriptionDetailPage() {
                 <IconBuildingStore className="size-4" />
                 <span>Tên nhà hàng</span>
               </div>
-              <p className="font-semibold text-lg">{subscriptionData.restaurantName}</p>
+              <p className="font-semibold text-lg">
+                {subscriptionData.restaurantName}
+              </p>
             </div>
 
             <Separator />
@@ -244,7 +273,9 @@ export default function AdminSubscriptionDetailPage() {
                 <IconUser className="size-4" />
                 <span>Tên khách hàng</span>
               </div>
-              <p className="font-semibold text-lg">{subscriptionData.user?.name || 'N/A'}</p>
+              <p className="font-semibold text-lg">
+                {subscriptionData.user?.name || "N/A"}
+              </p>
             </div>
 
             <Separator />
@@ -254,7 +285,7 @@ export default function AdminSubscriptionDetailPage() {
                 <IconMail className="size-4" />
                 <span>Email</span>
               </div>
-              <p>{subscriptionData.user?.email || 'N/A'}</p>
+              <p>{subscriptionData.user?.email || "N/A"}</p>
             </div>
 
             <div className="space-y-2">
@@ -263,9 +294,13 @@ export default function AdminSubscriptionDetailPage() {
                 <span>Ngày đăng ký</span>
               </div>
               <p>
-                {format(new Date(subscriptionData.createdAt), "dd/MM/yyyy 'lúc' HH:mm", {
-                  locale: vi,
-                })}
+                {format(
+                  new Date(subscriptionData.createdAt),
+                  "dd/MM/yyyy 'lúc' HH:mm",
+                  {
+                    locale: vi,
+                  }
+                )}
               </p>
             </div>
 
@@ -275,9 +310,13 @@ export default function AdminSubscriptionDetailPage() {
                 <span>Cập nhật gần nhất</span>
               </div>
               <p>
-                {format(new Date(subscriptionData.updatedAt), "dd/MM/yyyy 'lúc' HH:mm", {
-                  locale: vi,
-                })}
+                {format(
+                  new Date(subscriptionData.updatedAt),
+                  "dd/MM/yyyy 'lúc' HH:mm",
+                  {
+                    locale: vi,
+                  }
+                )}
               </p>
             </div>
           </CardContent>
@@ -297,7 +336,9 @@ export default function AdminSubscriptionDetailPage() {
                 <IconPackages className="size-4" />
                 <span>Tên gói</span>
               </div>
-              <p className="font-semibold text-lg">{subscriptionData.servicePlan?.name}</p>
+              <p className="font-semibold text-lg">
+                {subscriptionData.servicePlan?.name}
+              </p>
             </div>
 
             <Separator />
@@ -309,7 +350,9 @@ export default function AdminSubscriptionDetailPage() {
               </div>
               <p className="font-bold text-xl text-green-600">
                 {formatCurrency(subscriptionData.servicePlan?.price || 0)}
-                <span className="text-sm text-muted-foreground font-normal">/tháng</span>
+                <span className="text-sm text-muted-foreground font-normal">
+                  /tháng
+                </span>
               </p>
             </div>
 
@@ -318,7 +361,9 @@ export default function AdminSubscriptionDetailPage() {
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <span>Mô tả gói</span>
                 </div>
-                <p className="text-sm">{subscriptionData.servicePlan.description}</p>
+                <p className="text-sm">
+                  {subscriptionData.servicePlan.description}
+                </p>
               </div>
             )}
           </CardContent>
@@ -347,7 +392,9 @@ export default function AdminSubscriptionDetailPage() {
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Cập nhật trạng thái</label>
+                <label className="text-sm font-medium">
+                  Cập nhật trạng thái
+                </label>
                 <Select value={newStatus} onValueChange={setNewStatus}>
                   <SelectTrigger>
                     <SelectValue placeholder="Chọn trạng thái mới" />
@@ -362,7 +409,7 @@ export default function AdminSubscriptionDetailPage() {
                 </Select>
               </div>
 
-              <Button 
+              <Button
                 onClick={handleStatusUpdate}
                 disabled={!newStatus || isUpdating}
                 className="w-full"
@@ -403,7 +450,9 @@ export default function AdminSubscriptionDetailPage() {
 
             <div className="pt-4 space-y-2">
               <Button variant="outline" className="w-full" asChild>
-                <Link href={`/manage/payments?subscriptionId=${subscriptionData.id}`}>
+                <Link
+                  href={`/manage/payments?subscriptionId=${subscriptionData.id}`}
+                >
                   <IconCreditCard className="size-4 mr-2" />
                   Xem lịch sử thanh toán
                 </Link>

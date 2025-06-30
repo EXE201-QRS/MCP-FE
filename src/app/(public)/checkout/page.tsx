@@ -21,13 +21,13 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import { useUpdateProfileMutation } from "@/hooks/useAuth";
 import { useCreatePayOSPaymentMutation } from "@/hooks/usePayment";
 import { useGetServicePlan } from "@/hooks/useServicePlan";
 import {
   useAddSubscriptionMutation,
   useGetSubscriptionList,
 } from "@/hooks/useSubscription";
-import { useUpdateProfileMutation } from "@/hooks/useAuth";
 import { handleErrorApi } from "@/lib/utils";
 import {
   CreateSubscriptionBodyType,
@@ -38,17 +38,15 @@ import { useAuthStore } from "@/stores/auth.store";
 import {
   IconArrowLeft,
   IconBuildingStore,
-  IconCheck,
   IconCreditCard,
-  IconEdit,
   IconLoader2,
+  IconMail,
   IconMapPin,
   IconPackages,
   IconPhone,
   IconShield,
   IconShoppingCart,
   IconUser,
-  IconMail,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -165,11 +163,11 @@ export default function CheckoutPage() {
 
   // JWT validation helper
   const isJWTValid = (): boolean => {
-    if (typeof window === 'undefined') return false;
-    const token = localStorage.getItem('sessionToken');
+    if (typeof window === "undefined") return false;
+    const token = localStorage.getItem("sessionToken");
     if (!token) return false;
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
+      const payload = JSON.parse(atob(token.split(".")[1]));
       return Date.now() < payload.exp * 1000 && !!payload.userId;
     } catch {
       return false;
@@ -195,10 +193,12 @@ export default function CheckoutPage() {
       return;
     }
     if (!data.userPhone.trim()) {
-      form.setError("userPhone", { message: "Số điện thoại cá nhân là bắt buộc" });
+      form.setError("userPhone", {
+        message: "Số điện thoại cá nhân là bắt buộc",
+      });
       return;
     }
-    
+
     // Restaurant validation
     if (!data.restaurantName.trim()) {
       form.setError("restaurantName", { message: "Tên nhà hàng là bắt buộc" });
@@ -229,8 +229,11 @@ export default function CheckoutPage() {
       // First, update user profile if there are changes
       const currentUserName = user?.name || "";
       const currentUserPhone = user?.phoneNumber || "";
-      
-      if (data.userName !== currentUserName || data.userPhone !== currentUserPhone) {
+
+      if (
+        data.userName !== currentUserName ||
+        data.userPhone !== currentUserPhone
+      ) {
         console.log("Updating user profile...");
         try {
           await updateProfileMutation.mutateAsync({
@@ -241,7 +244,9 @@ export default function CheckoutPage() {
         } catch (profileError) {
           console.error("Profile update failed:", profileError);
           // Continue with subscription creation even if profile update fails
-          toast.warning("Không thể cập nhật thông tin cá nhân, nhưng đăng ký vẫn tiếp tục");
+          toast.warning(
+            "Không thể cập nhật thông tin cá nhân, nhưng đăng ký vẫn tiếp tục"
+          );
         }
       }
 
@@ -254,6 +259,7 @@ export default function CheckoutPage() {
         description: data.description?.trim() || null,
         servicePlanId: data.servicePlanId,
         durationDays: selectedDuration as any,
+        userId: 0,
       };
 
       // Add userId from auth store as fallback if backend doesn't extract from JWT
@@ -262,26 +268,26 @@ export default function CheckoutPage() {
       }
 
       const subscriptionResponse =
-      await addSubscriptionMutation.mutateAsync(subscriptionPayload);
+        await addSubscriptionMutation.mutateAsync(subscriptionPayload);
       const subscriptionId = subscriptionResponse.payload.data.id;
 
       // Create PayOS payment
       const paymentPayload = {
-      subscriptionId,
-      buyerName: data.userName || user?.name || '',
-      buyerEmail: user?.email || '',
-      buyerPhone: data.userPhone || user?.phoneNumber || '',
+        subscriptionId,
+        buyerName: data.userName || user?.name || "",
+        buyerEmail: user?.email || "",
+        buyerPhone: data.userPhone || user?.phoneNumber || "",
       };
 
       const paymentResponse =
-      await createPaymentMutation.mutateAsync(paymentPayload);
+        await createPaymentMutation.mutateAsync(paymentPayload);
       const checkoutUrl = paymentResponse.payload.data.payosData.checkoutUrl;
 
       // Redirect to PayOS
       if (checkoutUrl) {
-      window.location.href = checkoutUrl;
+        window.location.href = checkoutUrl;
       } else {
-      toast.error("Không thể tạo link thanh toán. Vui lòng thử lại.");
+        toast.error("Không thể tạo link thanh toán. Vui lòng thử lại.");
       }
     } catch (error) {
       // Check if it's a userId validation error
@@ -434,7 +440,8 @@ export default function CheckoutPage() {
                       Cập nhật thông tin cá nhân của bạn
                       <div className="mt-2 p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
                         <p className="text-sm text-green-700 dark:text-green-300">
-                          ✅ <strong>Tự động lưu:</strong> Thông tin sẽ được cập nhật vào hồ sơ của bạn khi đăng ký.
+                          ✅ <strong>Tự động lưu:</strong> Thông tin sẽ được cập
+                          nhật vào hồ sơ của bạn khi đăng ký.
                         </p>
                       </div>
                     </CardDescription>
@@ -481,7 +488,8 @@ export default function CheckoutPage() {
                     {/* User Phone */}
                     <div className="space-y-2">
                       <Label htmlFor="userPhone">
-                        Số điện thoại cá nhân <span className="text-destructive">*</span>
+                        Số điện thoại cá nhân{" "}
+                        <span className="text-destructive">*</span>
                       </Label>
                       <div className="relative">
                         <IconPhone className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
@@ -505,7 +513,8 @@ export default function CheckoutPage() {
                         </p>
                       )}
                       <p className="text-xs text-muted-foreground">
-                        Số điện thoại này sẽ được tự động điền vào thông tin nhà hàng
+                        Số điện thoại này sẽ được tự động điền vào thông tin nhà
+                        hàng
                       </p>
                     </div>
                   </CardContent>
@@ -663,28 +672,40 @@ export default function CheckoutPage() {
 
                     {/* Customer & Restaurant Info Preview */}
                     <div className="space-y-3">
-                      <Label className="text-sm font-medium">Thông tin đăng ký</Label>
+                      <Label className="text-sm font-medium">
+                        Thông tin đăng ký
+                      </Label>
                       <div className="text-xs space-y-2">
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Khách hàng:</span>
+                          <span className="text-muted-foreground">
+                            Khách hàng:
+                          </span>
                           <span className="font-medium">
-                            {form.watch("userName") || user?.name || "Chưa nhập"}
+                            {form.watch("userName") ||
+                              user?.name ||
+                              "Chưa nhập"}
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">SĐT cá nhân:</span>
+                          <span className="text-muted-foreground">
+                            SĐT cá nhân:
+                          </span>
                           <span className="font-medium">
                             {form.watch("userPhone") || "Chưa nhập"}
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Nhà hàng:</span>
+                          <span className="text-muted-foreground">
+                            Nhà hàng:
+                          </span>
                           <span className="font-medium">
                             {form.watch("restaurantName") || "Chưa nhập"}
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">SĐT nhà hàng:</span>
+                          <span className="text-muted-foreground">
+                            SĐT nhà hàng:
+                          </span>
                           <span className="font-medium">
                             {form.watch("restaurantPhone") || "Chưa nhập"}
                           </span>

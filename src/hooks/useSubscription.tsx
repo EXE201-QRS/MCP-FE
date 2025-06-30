@@ -96,8 +96,12 @@ export const useAddSubscriptionMutation = () => {
   return useMutation({
     mutationFn: subscriptionApiRequests.addSubscription,
     onSuccess: () => {
+      // Invalidate all subscription-related queries using predicate matching
       queryClient.invalidateQueries({
-        queryKey: ["subscriptions"],
+        predicate: (query) => {
+          const key = query.queryKey[0] as string;
+          return key?.includes('subscription') || key?.includes('admin-subscription');
+        },
       });
     },
   });
@@ -108,9 +112,13 @@ export const useUpdateSubscriptionMutation = () => {
   return useMutation({
     mutationFn: ({ id, ...body }: UpdateSubscriptionBodyType & { id: number }) =>
       subscriptionApiRequests.updateSubscription(id, body),
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
+      // Invalidate all subscription-related queries using pattern matching
       queryClient.invalidateQueries({
-        queryKey: ["subscriptions"],
+        predicate: (query) => {
+          const key = query.queryKey[0] as string;
+          return key?.includes('subscription') || key?.includes('admin-subscription');
+        },
       });
     },
   });
@@ -121,8 +129,12 @@ export const useDeleteSubscriptionMutation = () => {
   return useMutation({
     mutationFn: subscriptionApiRequests.deleteSubscription,
     onSuccess: () => {
+      // Invalidate all subscription-related queries using pattern matching
       queryClient.invalidateQueries({
-        queryKey: ["subscriptions"],
+        predicate: (query) => {
+          const key = query.queryKey[0] as string;
+          return key?.includes('subscription') || key?.includes('admin-subscription');
+        },
       });
     },
   });

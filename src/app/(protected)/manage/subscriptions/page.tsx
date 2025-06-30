@@ -9,14 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -25,17 +17,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useGetAdminSubscriptionList } from "@/hooks/useSubscription";
 import {
   IconBuildingStore,
   IconCreditCard,
   IconEye,
+  IconFilter,
   IconPackages,
+  IconRefresh,
   IconSearch,
   IconTrendingUp,
-  IconUsers,
-  IconFilter,
-  IconRefresh,
 } from "@tabler/icons-react";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
@@ -44,37 +43,41 @@ import { useState } from "react";
 
 const getStatusBadge = (status: string) => {
   const statusConfig = {
-    PENDING: { 
-      label: "Chờ thanh toán", 
+    PENDING: {
+      label: "Chờ thanh toán",
       variant: "secondary" as const,
-      className: "bg-yellow-500/10 text-yellow-700 border-yellow-200 dark:text-yellow-400"
+      className:
+        "bg-yellow-500/10 text-yellow-700 border-yellow-200 dark:text-yellow-400",
     },
-    PAID: { 
-      label: "Đã thanh toán", 
+    PAID: {
+      label: "Đã thanh toán",
       variant: "default" as const,
-      className: "bg-green-500/10 text-green-700 border-green-200 dark:text-green-400"
+      className:
+        "bg-green-500/10 text-green-700 border-green-200 dark:text-green-400",
     },
-    ACTIVE: { 
-      label: "Đang hoạt động", 
+    ACTIVE: {
+      label: "Đang hoạt động",
       variant: "default" as const,
-      className: "bg-blue-500/10 text-blue-700 border-blue-200 dark:text-blue-400"
+      className:
+        "bg-blue-500/10 text-blue-700 border-blue-200 dark:text-blue-400",
     },
-    EXPIRED: { 
-      label: "Hết hạn", 
+    EXPIRED: {
+      label: "Hết hạn",
       variant: "destructive" as const,
-      className: "bg-red-500/10 text-red-700 border-red-200 dark:text-red-400"
+      className: "bg-red-500/10 text-red-700 border-red-200 dark:text-red-400",
     },
-    CANCELLED: { 
-      label: "Đã hủy", 
+    CANCELLED: {
+      label: "Đã hủy",
       variant: "destructive" as const,
-      className: "bg-gray-500/10 text-gray-700 border-gray-200 dark:text-gray-400"
+      className:
+        "bg-gray-500/10 text-gray-700 border-gray-200 dark:text-gray-400",
     },
   };
 
   const config = statusConfig[status as keyof typeof statusConfig] || {
     label: status,
     variant: "secondary" as const,
-    className: ""
+    className: "",
   };
 
   return (
@@ -90,7 +93,11 @@ export default function AdminSubscriptionsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
-  const { data: subscriptionsData, isLoading, refetch } = useGetAdminSubscriptionList({
+  const {
+    data: subscriptionsData,
+    isLoading,
+    refetch,
+  } = useGetAdminSubscriptionList({
     page: currentPage,
     limit: pageSize,
   });
@@ -103,24 +110,39 @@ export default function AdminSubscriptionsPage() {
   };
 
   // Filter data based on search and status
-  const filteredSubscriptions = subscriptionsData?.payload?.data?.filter((subscription) => {
-    const matchesSearch = 
-      subscription.restaurantName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      subscription.user?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      subscription.servicePlan?.name?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === "all" || subscription.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
-  }) || [];
+  const filteredSubscriptions =
+    subscriptionsData?.payload?.data?.filter((subscription) => {
+      const matchesSearch =
+        subscription.restaurantName
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        subscription.user?.email
+          ?.toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        subscription.servicePlan?.name
+          ?.toLowerCase()
+          .includes(searchTerm.toLowerCase());
+
+      const matchesStatus =
+        statusFilter === "all" || subscription.status === statusFilter;
+
+      return matchesSearch && matchesStatus;
+    }) || [];
 
   // Calculate statistics
   const totalSubscriptions = subscriptionsData?.payload?.data?.length || 0;
-  const activeSubscriptions = subscriptionsData?.payload?.data?.filter(s => s.status === 'ACTIVE').length || 0;
-  const pendingSubscriptions = subscriptionsData?.payload?.data?.filter(s => s.status === 'PENDING').length || 0;
-  const totalRevenue = subscriptionsData?.payload?.data?.reduce((sum, s) => {
-    return s.status === 'PAID' || s.status === 'ACTIVE' ? sum + (s.servicePlan?.price || 0) : sum;
-  }, 0) || 0;
+  const activeSubscriptions =
+    subscriptionsData?.payload?.data?.filter((s) => s.status === "ACTIVE")
+      .length || 0;
+  const pendingSubscriptions =
+    subscriptionsData?.payload?.data?.filter((s) => s.status === "PENDING")
+      .length || 0;
+  const totalRevenue =
+    subscriptionsData?.payload?.data?.reduce((sum, s) => {
+      return s.status === "PAID" || s.status === "ACTIVE"
+        ? sum + (s.servicePlan?.price || 0)
+        : sum;
+    }, 0) || 0;
 
   return (
     <div className="space-y-6 p-6">
@@ -154,14 +176,18 @@ export default function AdminSubscriptionsPage() {
             </p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Đang hoạt động</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Đang hoạt động
+            </CardTitle>
             <IconBuildingStore className="size-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{activeSubscriptions}</div>
+            <div className="text-2xl font-bold text-green-600">
+              {activeSubscriptions}
+            </div>
             <p className="text-xs text-muted-foreground">
               Nhà hàng đang sử dụng
             </p>
@@ -170,14 +196,16 @@ export default function AdminSubscriptionsPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Chờ thanh toán</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Chờ thanh toán
+            </CardTitle>
             <IconCreditCard className="size-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{pendingSubscriptions}</div>
-            <p className="text-xs text-muted-foreground">
-              Cần xử lý
-            </p>
+            <div className="text-2xl font-bold text-yellow-600">
+              {pendingSubscriptions}
+            </div>
+            <p className="text-xs text-muted-foreground">Cần xử lý</p>
           </CardContent>
         </Card>
 
@@ -249,23 +277,24 @@ export default function AdminSubscriptionsPage() {
           {isLoading ? (
             <div className="space-y-4">
               {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="h-16 bg-muted animate-pulse rounded-md" />
+                <div
+                  key={i}
+                  className="h-16 bg-muted animate-pulse rounded-md"
+                />
               ))}
             </div>
           ) : filteredSubscriptions.length === 0 ? (
             <div className="text-center py-12">
               <IconPackages className="size-16 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">
-                {searchTerm || statusFilter !== "all" 
-                  ? "Không tìm thấy kết quả" 
-                  : "Chưa có đăng ký nào"
-                }
+                {searchTerm || statusFilter !== "all"
+                  ? "Không tìm thấy kết quả"
+                  : "Chưa có đăng ký nào"}
               </h3>
               <p className="text-muted-foreground">
                 {searchTerm || statusFilter !== "all"
                   ? "Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm"
-                  : "Đăng ký đầu tiên sẽ xuất hiện ở đây"
-                }
+                  : "Đăng ký đầu tiên sẽ xuất hiện ở đây"}
               </p>
             </div>
           ) : (
@@ -285,14 +314,17 @@ export default function AdminSubscriptionsPage() {
                 </TableHeader>
                 <TableBody>
                   {filteredSubscriptions.map((subscription) => (
-                    <TableRow key={subscription.id} className="hover:bg-muted/50">
+                    <TableRow
+                      key={subscription.id}
+                      className="hover:bg-muted/50"
+                    >
                       <TableCell>
                         <div className="space-y-1">
                           <div className="font-medium">
-                            {subscription.user?.name || 'N/A'}
+                            {subscription.user?.name || "N/A"}
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            {subscription.user?.email || 'N/A'}
+                            {subscription.user?.email || "N/A"}
                           </div>
                         </div>
                       </TableCell>
@@ -313,9 +345,13 @@ export default function AdminSubscriptionsPage() {
                       </TableCell>
                       <TableCell>
                         <div className="text-sm">
-                          {format(new Date(subscription.createdAt), "dd/MM/yyyy", {
-                            locale: vi,
-                          })}
+                          {format(
+                            new Date(subscription.createdAt),
+                            "dd/MM/yyyy",
+                            {
+                              locale: vi,
+                            }
+                          )}
                         </div>
                         <div className="text-xs text-muted-foreground">
                           {format(new Date(subscription.createdAt), "HH:mm", {
@@ -326,12 +362,18 @@ export default function AdminSubscriptionsPage() {
                       <TableCell>
                         {subscription.endDate ? (
                           <div className="text-sm">
-                            {format(new Date(subscription.endDate), "dd/MM/yyyy", {
-                              locale: vi,
-                            })}
+                            {format(
+                              new Date(subscription.endDate),
+                              "dd/MM/yyyy",
+                              {
+                                locale: vi,
+                              }
+                            )}
                           </div>
                         ) : (
-                          <span className="text-muted-foreground text-sm">-</span>
+                          <span className="text-muted-foreground text-sm">
+                            -
+                          </span>
                         )}
                       </TableCell>
                       <TableCell>
@@ -348,7 +390,9 @@ export default function AdminSubscriptionsPage() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Button variant="outline" size="sm" asChild>
-                            <Link href={`/manage/subscriptions/${subscription.id}`}>
+                            <Link
+                              href={`/manage/subscriptions/${subscription.id}`}
+                            >
                               <IconEye className="size-4" />
                             </Link>
                           </Button>
