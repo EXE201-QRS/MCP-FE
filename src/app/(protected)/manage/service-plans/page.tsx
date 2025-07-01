@@ -146,6 +146,7 @@ export default function ServicePlansPage() {
                     <TableHead>Tên gói</TableHead>
                     <TableHead>Mô tả</TableHead>
                     <TableHead>Giá</TableHead>
+                    <TableHead>Số lượng đăng ký</TableHead>
                     <TableHead>Ngày tạo</TableHead>
                     <TableHead className="w-[70px]">Thao tác</TableHead>
                   </TableRow>
@@ -173,6 +174,11 @@ export default function ServicePlansPage() {
                           <span className="text-xs text-muted-foreground ml-1">
                             /tháng
                           </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm text-muted-foreground">
+                          {plan.subscribersCount || 0} đăng ký
                         </div>
                       </TableCell>
                       <TableCell>

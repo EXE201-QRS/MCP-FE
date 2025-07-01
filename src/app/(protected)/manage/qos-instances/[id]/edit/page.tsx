@@ -182,7 +182,6 @@ export default function EditQosInstancePage() {
 
       toast.success("Cập nhật QOS Instance thành công!");
       router.push(`/manage/qos-instances/${instanceId}`);
-      router.refresh();
     } catch (error) {
       handleErrorApi({
         error,
