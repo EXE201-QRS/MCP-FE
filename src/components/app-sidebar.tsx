@@ -30,7 +30,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { useAuthStore } from "@/stores/auth.store";
+import { useAuth } from "@/hooks/useAuthState";
 import Link from "next/link";
 
 const data = {
@@ -132,10 +132,10 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { user } = useAuthStore();
+  const { user } = useAuth();
 
   const defaultUser = {
-    name: user?.name || "Admin User",
+    name: user?.name || user?.email?.split('@')[0] || "Admin User",
     email: user?.email || "admin@mcpqos.com",
     avatar: user?.avatar || "",
   };

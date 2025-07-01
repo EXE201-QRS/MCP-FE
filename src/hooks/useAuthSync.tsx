@@ -2,6 +2,7 @@
 
 import { getSessionTokenFromLocalStorage } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth.store";
+import { useRefreshAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 
@@ -14,15 +15,17 @@ interface AuthStore {
   isLoading: boolean;
   isAuthenticated: boolean;
   user?: User;
-  forceRefresh: () => Promise<void>;
 }
 
 /**
  * Hook để đồng bộ auth state sau login/register
  */
 export function useAuthSync() {
-  const { forceRefresh, isLoading, isAuthenticated } = useAuthStore();
+  const { isLoading, isAuthenticated } = useAuthStore();
+  const { refreshAuth } = useRefreshAuth();
   const lastTokenRef = useRef<string | null>(null);
+
+  // Không gọi useAccountMe ở đây nữa vì AuthProvider đã gọi rồi
 
   useEffect(() => {
     const checkTokenChange = async () => {
@@ -34,7 +37,7 @@ export function useAuthSync() {
         
         if (currentToken && !isAuthenticated && !isLoading) {
           console.log('🔄 Token detected, refreshing auth state...');
-          await forceRefresh();
+          await refreshAuth();
         }
       }
     };
@@ -42,11 +45,11 @@ export function useAuthSync() {
     // Check ngay khi mount
     checkTokenChange();
     
-    // Check mỗi 500ms (giảm từ 1000ms)
+    // Check mỗi 500ms
     const interval = setInterval(checkTokenChange, 500);
     
     return () => clearInterval(interval);
-  }, [forceRefresh, isAuthenticated, isLoading]);
+  }, [refreshAuth, isAuthenticated, isLoading]);
 
   return { isLoading, isAuthenticated };
 }

@@ -1,10 +1,9 @@
 "use client";
 
 import { useAuthSync } from "@/hooks/useAuthSync";
-import { useAuthStore } from "@/stores/auth.store";
+import { AuthProvider } from "@/components/providers/auth-provider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { useEffect } from "react";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -15,16 +14,9 @@ const queryClient = new QueryClient({
   },
 });
 
-// Component để initialize auth state
-function AuthInitializer({ children }: { children: React.ReactNode }) {
-  const { initialize } = useAuthStore();
+// Component để sync auth state sau khi login/register
+function AuthSyncWrapper({ children }: { children: React.ReactNode }) {
   const { isLoading } = useAuthSync();
-
-  useEffect(() => {
-    // Initialize auth state khi app load
-    initialize();
-  }, []);
-
   return <>{children}</>;
 }
 
@@ -35,7 +27,9 @@ export default function AppProvider({
 }) {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthInitializer>{children}</AuthInitializer>
+      <AuthProvider>
+        <AuthSyncWrapper>{children}</AuthSyncWrapper>
+      </AuthProvider>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );
