@@ -17,6 +17,7 @@ import {
   useGetAdminSubscriptionList,
   useSubscriptionStats,
 } from "@/hooks/useSubscription";
+import { useGetCustomerList } from "@/hooks/useUser";
 import {
   IconBuildingStore,
   IconCreditCard,
@@ -28,8 +29,6 @@ import {
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import Link from "next/link";
-
-import data from "./data.json";
 
 const getStatusBadge = (status: string) => {
   const statusConfig = {
@@ -85,6 +84,12 @@ export default function DashboardPage() {
       limit: 5, // Get recent 5 subscriptions
     });
 
+  const {
+    data: customers,
+    isLoading: customersLoading,
+    error: customersError,
+  } = useGetCustomerList();
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
@@ -96,6 +101,18 @@ export default function DashboardPage() {
     <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
       {/* Enhanced Stats Cards with Real Data */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 px-4 lg:px-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Số khách hàng</CardTitle>
+            <IconCreditCard className="size-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">
+              {customersLoading ? "..." : customers?.payload.totalItems || 0}
+            </div>
+            <p className="text-xs text-muted-foreground">Số lượng người dùng</p>
+          </CardContent>
+        </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Tổng đăng ký</CardTitle>
@@ -130,21 +147,6 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Chờ thanh toán
-            </CardTitle>
-            <IconCreditCard className="size-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">
-              {statsLoading ? "..." : stats?.pending || 0}
-            </div>
-            <p className="text-xs text-muted-foreground">Cần xử lý</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Doanh thu</CardTitle>
             <IconTrendingUp className="size-4 text-muted-foreground" />
           </CardHeader>
@@ -157,6 +159,11 @@ export default function DashboardPage() {
             </p>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Existing Charts */}
+      <div className="px-4 lg:px-6">
+        <ChartAreaInteractive />
       </div>
 
       {/* Recent Subscriptions */}
@@ -255,11 +262,6 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Existing Charts */}
-      <div className="px-4 lg:px-6">
-        <ChartAreaInteractive />
-      </div>
-
       {/* Quick Actions */}
       <div className="grid gap-4 md:grid-cols-3 px-4 lg:px-6">
         <Card className="hover:shadow-md transition-shadow cursor-pointer">
@@ -317,7 +319,7 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <DataTable data={data} />
+      <DataTable data={[]} />
     </div>
   );
 }
