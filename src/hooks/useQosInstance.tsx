@@ -32,7 +32,7 @@ export const useAddQosInstanceMutation = () => {
   return useMutation({
     mutationFn: qosInstanceApiRequests.addQosInstance,
     onSuccess: () => {
-      // Invalidate all QOS instances queries (using predicate to match any params)
+      // Invalidate all QOS instances queries
       queryClient.invalidateQueries({
         predicate: (query) => {
           return query.queryKey[0] === "qos-instances";
@@ -45,6 +45,11 @@ export const useAddQosInstanceMutation = () => {
           return key === "subscriptions" || key === "admin-subscriptions" || 
                  key === "subscription-with-qos" || key === "subscription-qos-health";
         },
+      });
+      // Force refetch specific QOS list
+      queryClient.refetchQueries({
+        queryKey: ["qos-instances"],
+        type: "active"
       });
     },
   });
@@ -56,7 +61,7 @@ export const useUpdateQosInstanceMutation = () => {
     mutationFn: ({ id, ...body }: UpdateQosInstanceBodyType & { id: number }) =>
       qosInstanceApiRequests.updateQosInstance(id, body),
     onSuccess: (data, variables) => {
-      // Invalidate all QOS instances queries (using predicate to match any params)
+      // Invalidate all QOS instances queries
       queryClient.invalidateQueries({
         predicate: (query) => {
           return query.queryKey[0] === "qos-instances";
@@ -69,6 +74,15 @@ export const useUpdateQosInstanceMutation = () => {
           return key === "subscriptions" || key === "admin-subscriptions" || 
                  key === "subscription-with-qos" || key === "subscription-qos-health";
         },
+      });
+      // Force refetch specific queries  
+      queryClient.refetchQueries({
+        queryKey: ["qos-instances"],
+        type: "active"
+      });
+      // Also invalidate the specific instance
+      queryClient.invalidateQueries({
+        queryKey: ["qos-instances", variables.id]
       });
     },
   });
@@ -79,7 +93,7 @@ export const useDeleteQosInstanceMutation = () => {
   return useMutation({
     mutationFn: qosInstanceApiRequests.deleteQosInstance,
     onSuccess: () => {
-      // Invalidate all QOS instances queries (using predicate to match any params)
+      // Invalidate all QOS instances queries
       queryClient.invalidateQueries({
         predicate: (query) => {
           return query.queryKey[0] === "qos-instances";
@@ -92,6 +106,11 @@ export const useDeleteQosInstanceMutation = () => {
           return key === "subscriptions" || key === "admin-subscriptions" || 
                  key === "subscription-with-qos" || key === "subscription-qos-health";
         },
+      });
+      // Force refetch QOS list
+      queryClient.refetchQueries({
+        queryKey: ["qos-instances"],
+        type: "active"
       });
     },
   });

@@ -44,6 +44,7 @@ import {
   IconEye,
   IconLoader,
   IconPlus,
+  IconRefresh,
   IconSearch,
   IconTrash,
   IconX,
@@ -91,7 +92,7 @@ export default function QosInstancesPage() {
   const [limit] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data, isLoading, error } = useGetQosInstanceList({ page, limit });
+  const { data, isLoading, error, refetch, isFetching } = useGetQosInstanceList({ page, limit });
   const deleteQosInstanceMutation = useDeleteQosInstanceMutation();
 
   const handleDelete = async (id: number, restaurantName: string) => {
@@ -165,12 +166,29 @@ export default function QosInstancesPage() {
             Quản lý và giám sát các instance QR ordering system
           </p>
         </div>
-        <Button asChild>
-          <Link href="/manage/qos-instances/create">
-            <IconPlus className="size-4 mr-2" />
-            Tạo QOS Instance
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button 
+            onClick={async () => {
+              try {
+                await refetch();
+                toast.success('Đã cập nhật dữ liệu QOS instances thành công!');
+              } catch (error) {
+                toast.error('Có lỗi xảy ra khi tải dữ liệu');
+              }
+            }} 
+            variant="outline" 
+            disabled={isFetching}
+          >
+            <IconRefresh className={`size-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
+            {isFetching ? 'Đang tải...' : 'Làm mới'}
+          </Button>
+          <Button asChild>
+            <Link href="/manage/qos-instances/create">
+              <IconPlus className="size-4 mr-2" />
+              Tạo QOS Instance
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* Search */}
