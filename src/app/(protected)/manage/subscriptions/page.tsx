@@ -40,6 +40,7 @@ import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import Link from "next/link";
 import { useState } from "react";
+import { toast } from "sonner";
 
 const getStatusBadge = (status: string) => {
   const statusConfig = {
@@ -97,6 +98,7 @@ export default function AdminSubscriptionsPage() {
     data: subscriptionsData,
     isLoading,
     refetch,
+    isFetching,
   } = useGetAdminSubscriptionList({
     page: currentPage,
     limit: pageSize,
@@ -156,9 +158,20 @@ export default function AdminSubscriptionsPage() {
             Theo dõi và quản lý tất cả đăng ký dịch vụ của khách hàng
           </p>
         </div>
-        <Button onClick={() => refetch()} variant="outline">
-          <IconRefresh className="size-4 mr-2" />
-          Làm mới
+        <Button 
+          onClick={async () => {
+            try {
+              await refetch();
+              toast.success('Đã cập nhật dữ liệu thành công!');
+            } catch (error) {
+              toast.error('Có lỗi xảy ra khi tải dữ liệu');
+            }
+          }} 
+          variant="outline" 
+          disabled={isFetching}
+        >
+          <IconRefresh className={`size-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
+          {isFetching ? 'Đang tải...' : 'Làm mới'}
         </Button>
       </div>
 

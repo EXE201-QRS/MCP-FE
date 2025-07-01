@@ -43,6 +43,7 @@ import { vi } from "date-fns/locale";
 import Link from "next/link";
 import { useState, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 
 const getPaymentStatusBadge = (status: string) => {
   const statusConfig = {
@@ -101,7 +102,7 @@ export default function AdminPaymentsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
-  const { data: subscriptionsData, isLoading, refetch } = useGetAdminSubscriptionList({
+  const { data: subscriptionsData, isLoading, refetch, isFetching } = useGetAdminSubscriptionList({
     page: 1,
     limit: 100, // Get more data for payment analysis
   });
@@ -212,9 +213,20 @@ export default function AdminPaymentsPage() {
               </Link>
             </Button>
           )}
-          <Button onClick={() => refetch()} variant="outline">
-            <IconRefresh className="size-4 mr-2" />
-            Làm mới
+          <Button 
+            onClick={async () => {
+              try {
+                await refetch();
+                toast.success('Đã cập nhật dữ liệu thanh toán thành công!');
+              } catch (error) {
+                toast.error('Có lỗi xảy ra khi tải dữ liệu');
+              }
+            }} 
+            variant="outline" 
+            disabled={isFetching}
+          >
+            <IconRefresh className={`size-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
+            {isFetching ? 'Đang tải...' : 'Làm mới'}
           </Button>
         </div>
       </div>

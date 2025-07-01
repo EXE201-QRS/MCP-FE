@@ -6,6 +6,7 @@ export const ServicePlanSchema = z
     name: z.string().trim().min(1).max(500),
     description: z.string().trim().max(1000).nullable(),
     price: z.number().min(0),
+    subscribersCount: z.number().int().min(0).optional().default(0),
     createdById: z.number().nullable(),
     updatedById: z.number().nullable(),
     deletedById: z.number().nullable(),

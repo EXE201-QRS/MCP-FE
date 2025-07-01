@@ -1,16 +1,12 @@
 "use client";
 
 import {
-  IconClipboardList,
   IconCreditCard,
   IconDashboard,
-  IconDatabase,
   IconHelp,
   IconInnerShadowTop,
   IconSettings,
   IconStar,
-  IconTrendingUp,
-  IconUser,
 } from "@tabler/icons-react";
 import * as React from "react";
 
@@ -37,11 +33,6 @@ const customerNavigation = {
       icon: IconDashboard,
     },
     {
-      title: "Gói dịch vụ", // Subscription management
-      url: "/customer/subscription",
-      icon: IconClipboardList,
-    },
-    {
       title: "Thanh toán", // Payment history
       url: "/customer/payments",
       icon: IconCreditCard,
@@ -51,23 +42,8 @@ const customerNavigation = {
       url: "/customer/reviews",
       icon: IconStar,
     },
-    {
-      title: "Thống kê", // Analytics
-      url: "/customer/analytics",
-      icon: IconTrendingUp,
-    },
-    {
-      title: "Cấu hình", // Configuration
-      url: "/customer/settings",
-      icon: IconDatabase,
-    },
   ],
   navSecondary: [
-    {
-      title: "Hồ sơ",
-      url: "/customer/profile",
-      icon: IconUser,
-    },
     {
       title: "Cài đặt",
       url: "/customer/settings",
