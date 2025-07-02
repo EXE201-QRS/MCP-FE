@@ -92,7 +92,9 @@ export default function QosInstancesPage() {
   const [limit] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data, isLoading, error, refetch, isFetching } = useGetQosInstanceList({ page, limit });
+  const { data, isLoading, error, refetch, isFetching } = useGetQosInstanceList(
+    { page, limit }
+  );
   const deleteQosInstanceMutation = useDeleteQosInstanceMutation();
 
   const handleDelete = async (id: number, restaurantName: string) => {
@@ -155,7 +157,7 @@ export default function QosInstancesPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <div className="container mx-auto py-8 space-y-6 px-4 lg:px-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -167,20 +169,22 @@ export default function QosInstancesPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button 
+          <Button
             onClick={async () => {
               try {
                 await refetch();
-                toast.success('Đã cập nhật dữ liệu QOS instances thành công!');
+                toast.success("Đã cập nhật dữ liệu QOS instances thành công!");
               } catch (error) {
-                toast.error('Có lỗi xảy ra khi tải dữ liệu');
+                toast.error("Có lỗi xảy ra khi tải dữ liệu");
               }
-            }} 
-            variant="outline" 
+            }}
+            variant="outline"
             disabled={isFetching}
           >
-            <IconRefresh className={`size-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
-            {isFetching ? 'Đang tải...' : 'Làm mới'}
+            <IconRefresh
+              className={`size-4 mr-2 ${isFetching ? "animate-spin" : ""}`}
+            />
+            {isFetching ? "Đang tải..." : "Làm mới"}
           </Button>
           <Button asChild>
             <Link href="/manage/qos-instances/create">

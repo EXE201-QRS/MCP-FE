@@ -37,7 +37,7 @@ export function CTASection() {
                   size="lg"
                   variant="outline"
                   asChild
-                  className="border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/10"
+                  className="bg-primary-foreground/10 text-primary-foreground hover:bg-primary-foreground/10"
                 >
                   <Link href="#contact">Liên hệ tư vấn</Link>
                 </Button>

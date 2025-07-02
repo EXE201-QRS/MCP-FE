@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { DemoDialog } from "@/components/demo/demo-dialog";
-import { VideoDemo } from "@/components/landing/video-demo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -87,22 +86,8 @@ export function HeroSection() {
           </div>
         </div>
 
-        {/* Hero Video Demo */}
-        <div className="mx-auto mt-20 max-w-5xl space-y-12">
-          {/* Video Demo Section */}
-          <div>
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold mb-2">
-                Xem QOS hoạt động thực tế
-              </h2>
-              <p className="text-muted-foreground">
-                Video demo 3 phút giúp bạn hiểu rõ cách QOS Scanorderly hoạt
-                động
-              </p>
-            </div>
-            <VideoDemo />
-          </div>
-
+        {/* Hero Image/Dashboard Preview */}
+        <div className="mx-auto mt-20 max-w-5xl">
           {/* Dashboard Preview */}
           <div>
             <div className="text-center mb-8">
