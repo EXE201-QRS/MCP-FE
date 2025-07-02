@@ -1,6 +1,6 @@
+import envConfig from "@/config";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import envConfig from "@/config";
 
 export async function GET() {
   try {
@@ -16,13 +16,16 @@ export async function GET() {
 
     // Call backend API to get user info
     try {
-      const response = await fetch(`${envConfig.NEXT_PUBLIC_API_ENDPOINT}/auth/me`, {
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${sessionToken}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+        `${envConfig.NEXT_PUBLIC_API_ENDPOINT}/auth/me`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${sessionToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (!response.ok) {
         if (response.status === 401) {
