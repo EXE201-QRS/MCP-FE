@@ -86,7 +86,10 @@ export const SendOTPBodySchema = VerificationCodeSchema.pick({
   type: true,
 }).strict();
 
-export const GetAccountProfileResSchema = UserSchema;
+export const GetAccountProfileResSchema = z.object({
+  data: UserSchema.omit({ password: true }),
+  message: z.string(),
+});
 
 //type
 export type RegisterBodyType = z.infer<typeof RegisterBodySchema>;

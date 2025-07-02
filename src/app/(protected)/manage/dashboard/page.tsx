@@ -1,325 +1,417 @@
 "use client";
 
-import { ChartAreaInteractive } from "@/components/chart-area-interactive";
-import { DataTable } from "@/components/data-table";
-import { Badge } from "@/components/ui/badge";
+import dashboardApiRequest, { DashboardQuery } from "@/apiRequests/dashboard";
+import {
+  CustomerSegmentsChart,
+  GeographicRevenueChart,
+} from "@/components/dashboard/customer-geographic";
+import OverviewCards from "@/components/dashboard/overview-cards";
+import PeriodSelector from "@/components/dashboard/period-selector";
+import RevenueChart from "@/components/dashboard/revenue-chart";
+import ServicePlanRevenueChart from "@/components/dashboard/service-plan-revenue";
+import {
+  RecentTransactionsTable,
+  TopCustomersTable,
+} from "@/components/dashboard/tables";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
-  useGetAdminSubscriptionList,
-  useSubscriptionStats,
-} from "@/hooks/useSubscription";
-import { useGetCustomerList } from "@/hooks/useUser";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useQuery } from "@tanstack/react-query";
 import {
-  IconBuildingStore,
-  IconCreditCard,
-  IconEye,
-  IconPackages,
-  IconTrendingUp,
-  IconUsers,
-} from "@tabler/icons-react";
-import { format } from "date-fns";
-import { vi } from "date-fns/locale";
-import Link from "next/link";
-
-const getStatusBadge = (status: string) => {
-  const statusConfig = {
-    PENDING: {
-      label: "Chờ thanh toán",
-      variant: "secondary" as const,
-      className:
-        "bg-yellow-500/10 text-yellow-700 border-yellow-200 dark:text-yellow-400",
-    },
-    PAID: {
-      label: "Đã thanh toán",
-      variant: "default" as const,
-      className:
-        "bg-green-500/10 text-green-700 border-green-200 dark:text-green-400",
-    },
-    ACTIVE: {
-      label: "Đang hoạt động",
-      variant: "default" as const,
-      className:
-        "bg-blue-500/10 text-blue-700 border-blue-200 dark:text-blue-400",
-    },
-    EXPIRED: {
-      label: "Hết hạn",
-      variant: "destructive" as const,
-      className: "bg-red-500/10 text-red-700 border-red-200 dark:text-red-400",
-    },
-    CANCELLED: {
-      label: "Đã hủy",
-      variant: "destructive" as const,
-      className:
-        "bg-gray-500/10 text-gray-700 border-gray-200 dark:text-gray-400",
-    },
-  };
-
-  const config = statusConfig[status as keyof typeof statusConfig] || {
-    label: status,
-    variant: "secondary" as const,
-    className: "",
-  };
-
-  return (
-    <Badge variant={config.variant} className={config.className}>
-      {config.label}
-    </Badge>
-  );
-};
+  BarChart3,
+  Download,
+  MapPin,
+  PieChart,
+  RefreshCw,
+  TrendingUp,
+  Users,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export default function DashboardPage() {
-  const { data: stats, isLoading: statsLoading } = useSubscriptionStats();
-  const { data: recentSubscriptions, isLoading: subscriptionsLoading } =
-    useGetAdminSubscriptionList({
-      page: 1,
-      limit: 5, // Get recent 5 subscriptions
-    });
+  const [period, setPeriod] = useState<"7d" | "30d" | "90d" | "1y" | "custom">(
+    "30d"
+  );
+  const [startDate, setStartDate] = useState<Date>();
+  const [endDate, setEndDate] = useState<Date>();
+  const [chartType, setChartType] = useState<"line" | "area" | "bar">("area");
+  const [servicePlanChartType, setServicePlanChartType] = useState<
+    "pie" | "bar"
+  >("pie");
 
-  const {
-    data: customers,
-    isLoading: customersLoading,
-    error: customersError,
-  } = useGetCustomerList();
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(amount);
+  // Prepare query parameters
+  const queryParams: DashboardQuery = {
+    period,
+    startDate: startDate?.toISOString(),
+    endDate: endDate?.toISOString(),
+    timeZone: "Asia/Ho_Chi_Minh",
   };
 
+  // Main analytics query
+  const {
+    data: analytics,
+    isLoading: analyticsLoading,
+    error: analyticsError,
+    refetch: refetchAnalytics,
+  } = useQuery({
+    queryKey: ["dashboard-analytics", queryParams],
+    queryFn: () => dashboardApiRequest.getAnalytics(queryParams),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 2,
+  });
+
+  // Individual queries for better performance and caching
+  const {
+    data: revenueChart,
+    isLoading: revenueChartLoading,
+    refetch: refetchRevenueChart,
+  } = useQuery({
+    queryKey: ["revenue-chart", { ...queryParams, granularity: "day" }],
+    queryFn: () =>
+      dashboardApiRequest.getRevenueChart({
+        ...queryParams,
+        granularity: "day",
+      }),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const {
+    data: servicePlanRevenue,
+    isLoading: servicePlanLoading,
+    refetch: refetchServicePlan,
+  } = useQuery({
+    queryKey: ["service-plan-revenue", queryParams],
+    queryFn: () => dashboardApiRequest.getServicePlanRevenue(queryParams),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const {
+    data: topCustomers,
+    isLoading: topCustomersLoading,
+    refetch: refetchTopCustomers,
+  } = useQuery({
+    queryKey: ["top-customers", { ...queryParams, limit: 10 }],
+    queryFn: () =>
+      dashboardApiRequest.getTopCustomers({ ...queryParams, limit: 10 }),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const {
+    data: recentTransactions,
+    isLoading: recentTransactionsLoading,
+    refetch: refetchRecentTransactions,
+  } = useQuery({
+    queryKey: ["recent-transactions", 10],
+    queryFn: () => dashboardApiRequest.getRecentTransactions(10),
+    staleTime: 2 * 60 * 1000, // More frequent updates for transactions
+  });
+
+  // Handle period change
+  const handlePeriodChange = (newPeriod: typeof period) => {
+    setPeriod(newPeriod);
+    if (newPeriod !== "custom") {
+      setStartDate(undefined);
+      setEndDate(undefined);
+    }
+  };
+
+  // Handle date change for custom period
+  const handleDateChange = (
+    newStartDate: Date | undefined,
+    newEndDate: Date | undefined
+  ) => {
+    setStartDate(newStartDate);
+    setEndDate(newEndDate);
+  };
+
+  // Refresh all data
+  const handleRefreshAll = async () => {
+    try {
+      await Promise.all([
+        refetchAnalytics(),
+        refetchRevenueChart(),
+        refetchServicePlan(),
+        refetchTopCustomers(),
+        refetchRecentTransactions(),
+      ]);
+      toast.success("Dữ liệu đã được cập nhật");
+    } catch (error) {
+      toast.error("Có lỗi khi cập nhật dữ liệu");
+    }
+  };
+
+  // Export data (placeholder)
+  const handleExportData = () => {
+    toast.info("Tính năng xuất dữ liệu đang được phát triển");
+  };
+
+  // Handle errors
+  useEffect(() => {
+    if (analyticsError) {
+      toast.error("Có lỗi khi tải dữ liệu dashboard");
+    }
+  }, [analyticsError]);
+
+  const isLoading =
+    analyticsLoading || revenueChartLoading || servicePlanLoading;
+
   return (
-    <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-      {/* Enhanced Stats Cards with Real Data */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 px-4 lg:px-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Số khách hàng</CardTitle>
-            <IconCreditCard className="size-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {customersLoading ? "..." : customers?.payload.totalItems || 0}
-            </div>
-            <p className="text-xs text-muted-foreground">Số lượng người dùng</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tổng đăng ký</CardTitle>
-            <IconPackages className="size-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {statsLoading ? "..." : stats?.total || 0}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Tất cả đăng ký dịch vụ
+    <div className="flex flex-col gap-6 py-6">
+      {/* Header */}
+      <div className="flex flex-col space-y-4 px-4 lg:px-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">
+              Dashboard Analytics
+            </h1>
+            <p className="text-muted-foreground">
+              Tổng quan doanh thu và hiệu suất kinh doanh
             </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Đang hoạt động
-            </CardTitle>
-            <IconBuildingStore className="size-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {statsLoading ? "..." : stats?.active || 0}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Nhà hàng đang sử dụng
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Doanh thu</CardTitle>
-            <IconTrendingUp className="size-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {statsLoading ? "..." : formatCurrency(stats?.revenue || 0)}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Từ đăng ký đã thanh toán
-            </p>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefreshAll}
+              disabled={isLoading}
+            >
+              <RefreshCw
+                className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
+              />
+              Làm mới
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleExportData}>
+              <Download className="h-4 w-4 mr-2" />
+              Xuất dữ liệu
+            </Button>
+          </div>
+        </div>
       </div>
 
-      {/* Existing Charts */}
+      {/* Period Selector */}
       <div className="px-4 lg:px-6">
-        <ChartAreaInteractive />
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <div className="lg:col-span-1">
+            <PeriodSelector
+              period={period}
+              startDate={startDate}
+              endDate={endDate}
+              onPeriodChange={handlePeriodChange}
+              onDateChange={handleDateChange}
+              isLoading={isLoading}
+            />
+          </div>
+
+          {/* Overview Cards */}
+          <div className="lg:col-span-3">
+            <OverviewCards
+              data={
+                analytics?.payload?.data?.overview || {
+                  totalRevenue: 0,
+                  revenueGrowth: 0,
+                  totalOrders: 0,
+                  ordersGrowth: 0,
+                  totalCustomers: 0,
+                  customersGrowth: 0,
+                  totalActiveInstances: 0,
+                  instancesGrowth: 0,
+                  averageOrderValue: 0,
+                  aovGrowth: 0,
+                  conversionRate: 0,
+                  conversionGrowth: 0,
+                }
+              }
+              isLoading={analyticsLoading}
+            />
+          </div>
+        </div>
       </div>
 
-      {/* Recent Subscriptions */}
+      {/* Charts Section */}
       <div className="px-4 lg:px-6">
-        <Card>
-          <CardHeader>
+        <Tabs defaultValue="revenue" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger
+              value="revenue"
+              className="flex items-center space-x-2"
+            >
+              <TrendingUp className="h-4 w-4" />
+              <span>Doanh Thu</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="services"
+              className="flex items-center space-x-2"
+            >
+              <PieChart className="h-4 w-4" />
+              <span>Dịch Vụ</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="customers"
+              className="flex items-center space-x-2"
+            >
+              <Users className="h-4 w-4" />
+              <span>Khách Hàng</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="geographic"
+              className="flex items-center space-x-2"
+            >
+              <MapPin className="h-4 w-4" />
+              <span>Khu Vực</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="analytics"
+              className="flex items-center space-x-2"
+            >
+              <BarChart3 className="h-4 w-4" />
+              <span>Phân Tích</span>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="revenue" className="space-y-6">
             <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Đăng ký gần đây</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  5 đăng ký mới nhất trong hệ thống
-                </p>
-              </div>
-              <Button variant="outline" asChild>
-                <Link href="/manage/subscriptions">Xem tất cả</Link>
-              </Button>
+              <h3 className="text-lg font-semibold">Biểu Đồ Doanh Thu</h3>
+              <Select
+                value={chartType}
+                onValueChange={(value: any) => setChartType(value)}
+              >
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="area">Vùng</SelectItem>
+                  <SelectItem value="line">Đường</SelectItem>
+                  <SelectItem value="bar">Cột</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          </CardHeader>
-          <CardContent>
-            {subscriptionsLoading ? (
-              <div className="space-y-4">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-16 bg-muted animate-pulse rounded-md"
-                  />
-                ))}
-              </div>
-            ) : recentSubscriptions?.payload?.data?.length === 0 ? (
-              <div className="text-center py-8">
-                <IconPackages className="size-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">Chưa có đăng ký nào</p>
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Khách hàng</TableHead>
-                    <TableHead>Nhà hàng</TableHead>
-                    <TableHead>Gói dịch vụ</TableHead>
-                    <TableHead>Ngày đăng ký</TableHead>
-                    <TableHead>Trạng thái</TableHead>
-                    <TableHead>Thao tác</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {recentSubscriptions?.payload?.data?.map((subscription) => (
-                    <TableRow key={subscription.id}>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">
-                            {subscription.user?.name || "N/A"}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            {subscription.user?.email || "N/A"}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="font-medium">
-                          {subscription.restaurantName}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">
-                          {subscription.servicePlan?.name}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {format(
-                          new Date(subscription.createdAt),
-                          "dd/MM/yyyy",
-                          {
-                            locale: vi,
-                          }
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {getStatusBadge(subscription.status)}
-                      </TableCell>
-                      <TableCell>
-                        <Button variant="outline" size="sm" asChild>
-                          <Link
-                            href={`/manage/subscriptions/${subscription.id}`}
+            <RevenueChart
+              data={revenueChart?.payload?.data || []}
+              isLoading={revenueChartLoading}
+              chartType={chartType}
+              showCumulative={true}
+            />
+          </TabsContent>
+
+          <TabsContent value="services" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">
+                Doanh Thu Theo Gói Dịch Vụ
+              </h3>
+              <Select
+                value={servicePlanChartType}
+                onValueChange={(value: any) => setServicePlanChartType(value)}
+              >
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pie">Tròn</SelectItem>
+                  <SelectItem value="bar">Cột</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <ServicePlanRevenueChart
+              data={servicePlanRevenue?.payload?.data || []}
+              isLoading={servicePlanLoading}
+              chartType={servicePlanChartType}
+            />
+          </TabsContent>
+
+          <TabsContent value="customers" className="space-y-6">
+            <h3 className="text-lg font-semibold">Phân Tích Khách Hàng</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <CustomerSegmentsChart
+                data={analytics?.payload?.data?.customerSegments || []}
+                isLoading={analyticsLoading}
+              />
+              <TopCustomersTable
+                data={topCustomers?.payload?.data || []}
+                isLoading={topCustomersLoading}
+              />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="geographic" className="space-y-6">
+            <h3 className="text-lg font-semibold">Phân Bố Theo Khu Vực</h3>
+            <GeographicRevenueChart
+              data={analytics?.payload?.data?.geographicRevenue || []}
+              isLoading={analyticsLoading}
+            />
+          </TabsContent>
+
+          <TabsContent value="analytics" className="space-y-6">
+            <h3 className="text-lg font-semibold">Phân Tích Chi Tiết</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Payment Methods */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Phương Thức Thanh Toán</CardTitle>
+                  <CardDescription>
+                    Thống kê theo phương thức thanh toán
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {analyticsLoading ? (
+                    <div className="h-40 w-full animate-pulse bg-muted rounded"></div>
+                  ) : (
+                    <div className="space-y-4">
+                      {analytics?.payload?.data?.paymentMethodStats?.map(
+                        (method, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center justify-between"
                           >
-                            <IconEye className="size-4" />
-                          </Link>
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
+                            <span className="text-sm font-medium">
+                              {method.method}
+                            </span>
+                            <div className="text-right">
+                              <div className="text-sm font-semibold">
+                                {new Intl.NumberFormat("vi-VN", {
+                                  style: "currency",
+                                  currency: "VND",
+                                }).format(method.revenue)}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {method.orders} đơn (
+                                {method.percentage.toFixed(1)}%)
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      ) || (
+                        <p className="text-muted-foreground">
+                          Không có dữ liệu
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Recent Transactions */}
+              <RecentTransactionsTable
+                data={recentTransactions?.payload?.data || []}
+                isLoading={recentTransactionsLoading}
+              />
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
-
-      {/* Quick Actions */}
-      <div className="grid gap-4 md:grid-cols-3 px-4 lg:px-6">
-        <Card className="hover:shadow-md transition-shadow cursor-pointer">
-          <CardHeader>
-            <CardTitle className="text-sm">Quản lý đăng ký</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Button
-              variant="ghost"
-              className="w-full justify-start p-0"
-              asChild
-            >
-              <Link href="/manage/subscriptions">
-                <IconPackages className="size-4 mr-2" />
-                Xem tất cả đăng ký
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-md transition-shadow cursor-pointer">
-          <CardHeader>
-            <CardTitle className="text-sm">Quản lý thanh toán</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Button
-              variant="ghost"
-              className="w-full justify-start p-0"
-              asChild
-            >
-              <Link href="/manage/payments">
-                <IconCreditCard className="size-4 mr-2" />
-                Xem giao dịch
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-md transition-shadow cursor-pointer">
-          <CardHeader>
-            <CardTitle className="text-sm">Gói dịch vụ</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Button
-              variant="ghost"
-              className="w-full justify-start p-0"
-              asChild
-            >
-              <Link href="/manage/service-plans">
-                <IconUsers className="size-4 mr-2" />
-                Quản lý gói
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-
-      <DataTable data={[]} />
     </div>
   );
 }

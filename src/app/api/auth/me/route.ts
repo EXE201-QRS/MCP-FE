@@ -1,3 +1,4 @@
+import envConfig from "@/config";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
@@ -13,51 +14,40 @@ export async function GET() {
       );
     }
 
-    // Decode JWT token manually (simple base64 decode)
+    // Call backend API to get user info
     try {
-      const parts = sessionToken.split(".");
-      if (parts.length !== 3) {
-        throw new Error("Invalid token format");
+      const response = await fetch(
+        `${envConfig.NEXT_PUBLIC_API_ENDPOINT}/auth/me`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${sessionToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          return NextResponse.json(
+            { message: "Token không hợp lệ hoặc đã hết hạn" },
+            { status: 401 }
+          );
+        }
+        throw new Error(`Backend API error: ${response.status}`);
       }
 
-      const payload = JSON.parse(atob(parts[1]));
-
-      // Check if token is expired
-      if (payload.exp && payload.exp * 1000 < Date.now()) {
-        return NextResponse.json(
-          { message: "Token đã hết hạn" },
-          { status: 401 }
-        );
-      }
-
-      // TODO: Fetch user data from backend API
-      // For now, return mock data
-      const user = {
-        id: payload.userId,
-        email: payload.email,
-        name:
-          payload.email === "admin@mcpqos.com"
-            ? "System Administrator"
-            : "Customer User",
-        roleName: payload.roleName,
-        avatar: null,
-        phoneNumber: null,
-        createdById: null,
-        updatedById: null,
-        deletedById: null,
-        deletedAt: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      return NextResponse.json({ data: user });
-    } catch (decodeError) {
+      const userData = await response.json();
+      return NextResponse.json(userData);
+    } catch (fetchError: any) {
+      console.error("Error calling backend /auth/me:", fetchError);
       return NextResponse.json(
-        { message: "Token không hợp lệ" },
-        { status: 401 }
+        { message: "Không thể lấy thông tin người dùng từ server" },
+        { status: 500 }
       );
     }
   } catch (error: any) {
+    console.error("Unexpected error in /api/auth/me:", error);
     return NextResponse.json(
       { message: error?.message ?? "Có lỗi xảy ra" },
       { status: 500 }

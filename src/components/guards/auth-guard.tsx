@@ -2,7 +2,7 @@
 
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useAuthStore } from "@/stores/auth.store"
+import { useAuth } from "@/hooks/useAuthState"
 import { Role, RoleType } from "@/constants/auth.constant"
 
 interface AuthGuardProps {
@@ -17,7 +17,7 @@ export function AuthGuard({
   fallbackUrl = "/login" 
 }: AuthGuardProps) {
   const router = useRouter()
-  const { user, isAuthenticated, isLoading } = useAuthStore()
+  const { user, isAuthenticated, isLoading } = useAuth()
 
   useEffect(() => {
     // Nếu đang loading thì chờ
