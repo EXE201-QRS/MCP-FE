@@ -3,7 +3,6 @@
 import { toast } from "sonner";
 import { create } from "zustand";
 
-import authApiRequest from "@/apiRequests/auth";
 import {
   getSessionTokenFromLocalStorage,
   removeTokensFromLocalStorage,
@@ -23,10 +22,8 @@ interface AuthState {
   setIsLoading: (loading: boolean) => void;
 
   // Async actions
-  fetchUserProfile: () => Promise<void>;
   logout: () => Promise<void>;
-  initialize: () => Promise<void>;
-  forceRefresh: () => Promise<void>;
+  initialize: () => void;
 }
 
 export const useAuthStore = create<AuthState>()((set, get) => ({
@@ -42,30 +39,6 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   })),
   setIsAuthenticated: (isAuthenticated) => set({ isAuthenticated }),
   setIsLoading: (isLoading) => set({ isLoading }),
-
-  // Fetch user profile
-  fetchUserProfile: async () => {
-    try {
-      console.log('📝 Fetching user profile...');
-      set({ isLoading: true });
-      const response = await authApiRequest.me();
-      const userData = (response.payload as unknown as { data: UserType }).data;
-      console.log('✅ User profile fetched successfully:', userData);
-      set({
-        user: userData,
-        isAuthenticated: true,
-        isLoading: false,
-      });
-    } catch (error: any) {
-      console.error("❌ Failed to fetch user profile:", error);
-      removeTokensFromLocalStorage();
-      set({
-        user: null,
-        isAuthenticated: false,
-        isLoading: false,
-      });
-    }
-  },
 
   // Logout
   logout: async () => {
@@ -93,44 +66,13 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     }
   },
 
-  // Initialize auth state
-  initialize: async () => {
-    try {
-      console.log('🚀 Initializing auth state...');
-      set({ isLoading: true });
-      
-      const token = getSessionTokenFromLocalStorage();
-      if (token) {
-        console.log('🎫 Token found, fetching profile...');
-        // Fetch user profile if token exists
-        await get().fetchUserProfile();
-      } else {
-        console.log('❌ No token found, setting as unauthenticated');
-        // No token, set as unauthenticated
-        set({ 
-          user: null, 
-          isAuthenticated: false, 
-          isLoading: false 
-        });
-      }
-    } catch (error) {
-      console.error("❌ Auth initialization error:", error);
-      // Clear invalid data
-      removeTokensFromLocalStorage();
-      set({ 
-        user: null, 
-        isAuthenticated: false, 
-        isLoading: false 
-      });
-    }
-  },
-
-  // Force refresh auth state
-  forceRefresh: async () => {
+  // Initialize auth state - chỉ check token có tồn tại
+  initialize: () => {
     const token = getSessionTokenFromLocalStorage();
     if (token) {
-      await get().fetchUserProfile();
+      console.log('🎫 Token found, auth will be handled by useAccountMe hook');
     } else {
+      console.log('❌ No token found, setting as unauthenticated');
       set({ 
         user: null, 
         isAuthenticated: false, 
@@ -139,4 +81,3 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     }
   },
 }));
-
