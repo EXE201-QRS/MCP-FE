@@ -26,10 +26,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Role } from "@/constants/auth.constant";
-import {
-  useDeleteUserMutation,
-  useGetUserList,
-} from "@/hooks/useUser";
+import { useDeleteUserMutation, useGetUserList } from "@/hooks/useUser";
 import { handleErrorApi } from "@/lib/utils";
 import {
   IconDots,
@@ -51,10 +48,10 @@ export default function CustomersPage() {
   const [limit] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data, isLoading, error } = useGetUserList({ 
-    page, 
+  const { data, isLoading, error } = useGetUserList({
+    page,
     limit,
-    role: Role.CUSTOMER 
+    role: Role.CUSTOMER,
   });
   const deleteUserMutation = useDeleteUserMutation();
 
@@ -81,11 +78,13 @@ export default function CustomersPage() {
       .slice(0, 2);
   };
 
-  const filteredCustomers = data?.payload.data?.filter((customer) =>
-    customer.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.phoneNumber?.toLowerCase().includes(searchQuery.toLowerCase())
-  ) || [];
+  const filteredCustomers =
+    data?.payload.data?.filter(
+      (customer) =>
+        customer.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        customer.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        customer.phoneNumber?.toLowerCase().includes(searchQuery.toLowerCase())
+    ) || [];
 
   if (error) {
     return (
@@ -102,11 +101,13 @@ export default function CustomersPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <div className="container mx-auto py-8 space-y-6 px-4 lg:px-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Quản lý khách hàng</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Quản lý khách hàng
+          </h1>
           <p className="text-muted-foreground">
             Quản lý thông tin các khách hàng sử dụng dịch vụ
           </p>
@@ -142,7 +143,8 @@ export default function CustomersPage() {
             Danh sách khách hàng
           </CardTitle>
           <CardDescription>
-            {filteredCustomers.length} / {data?.payload.data?.length || 0} khách hàng
+            {filteredCustomers.length} / {data?.payload.data?.length || 0} khách
+            hàng
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -159,13 +161,14 @@ export default function CustomersPage() {
             <div className="text-center py-12">
               <IconUsers className="size-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">
-                {searchQuery ? "Không tìm thấy khách hàng" : "Chưa có khách hàng nào"}
+                {searchQuery
+                  ? "Không tìm thấy khách hàng"
+                  : "Chưa có khách hàng nào"}
               </h3>
               <p className="text-muted-foreground mb-4">
-                {searchQuery 
+                {searchQuery
                   ? "Thử thay đổi từ khóa tìm kiếm hoặc tạo khách hàng mới"
-                  : "Thêm khách hàng đầu tiên để bắt đầu quản lý"
-                }
+                  : "Thêm khách hàng đầu tiên để bắt đầu quản lý"}
               </p>
               {!searchQuery && (
                 <Button asChild>
@@ -210,7 +213,9 @@ export default function CustomersPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="font-mono text-sm">{customer.email}</div>
+                        <div className="font-mono text-sm">
+                          {customer.email}
+                        </div>
                       </TableCell>
                       <TableCell>
                         {customer.phoneNumber ? (
@@ -223,9 +228,13 @@ export default function CustomersPage() {
                       </TableCell>
                       <TableCell>
                         <div className="text-sm text-muted-foreground">
-                          {format(new Date(customer.createdAt), "dd/MM/yyyy HH:mm", {
-                            locale: vi,
-                          })}
+                          {format(
+                            new Date(customer.createdAt),
+                            "dd/MM/yyyy HH:mm",
+                            {
+                              locale: vi,
+                            }
+                          )}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -243,14 +252,21 @@ export default function CustomersPage() {
                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
-                              <Link href={`/manage/customers/${customer.id}/edit`}>
+                              <Link
+                                href={`/manage/customers/${customer.id}/edit`}
+                              >
                                 <IconEdit className="size-4 mr-2" />
                                 Chỉnh sửa
                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               className="text-destructive"
-                              onClick={() => handleDelete(customer.id, customer.name || customer.email)}
+                              onClick={() =>
+                                handleDelete(
+                                  customer.id,
+                                  customer.name || customer.email
+                                )
+                              }
                               disabled={deleteUserMutation.isPending}
                             >
                               <IconTrash className="size-4 mr-2" />
@@ -270,8 +286,8 @@ export default function CustomersPage() {
           {data?.payload && data.payload.totalPages > 1 && (
             <div className="flex items-center justify-between pt-4">
               <div className="text-sm text-muted-foreground">
-                Trang {data.payload.page} / {data.payload.totalPages} 
-                ({data.payload.totalItems} khách hàng)
+                Trang {data.payload.page} / {data.payload.totalPages}(
+                {data.payload.totalItems} khách hàng)
               </div>
               <div className="flex gap-2">
                 <Button
