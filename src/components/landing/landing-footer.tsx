@@ -33,8 +33,8 @@ const footerLinks = {
     { name: "Đối tác", href: "/partners" },
   ],
   legal: [
-    { name: "Điều khoản sử dụng", href: "/terms" },
-    { name: "Chính sách bảo mật", href: "/privacy" },
+    { name: "Điều khoản dịch vụ", href: "/terms-of-service" },
+    { name: "Chính sách bảo mật", href: "/privacy-policy" },
     { name: "Chính sách cookie", href: "/cookies" },
     { name: "GDPR", href: "/gdpr" },
   ],
