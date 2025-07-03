@@ -87,6 +87,8 @@ export function VideoDemo() {
             <Image
               src={thumbnailUrl}
               alt="QOS Scanorderly Demo Video Thumbnail"
+              width={1280}
+              height={720}
               className="absolute inset-0 w-full h-full object-cover"
               onError={(e) => {
                 // Fallback if thumbnail fails to load

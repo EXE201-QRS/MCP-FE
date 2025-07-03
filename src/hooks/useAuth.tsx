@@ -102,3 +102,26 @@ export const useRefreshAuth = () => {
 
   return { refreshAuth };
 };
+
+// Hook for Google OAuth
+export const useGoogleAuth = () => {
+  const getGoogleAuthUrlMutation = useMutation({
+    mutationFn: authApiRequest.getGoogleAuthUrl,
+    onSuccess: (data) => {
+      // Redirect to Google authorization URL
+      window.location.href = data.payload.url;
+    },
+    onError: (error) => {
+      console.error("Google auth error:", error);
+    },
+  });
+
+  const initiateGoogleLogin = () => {
+    getGoogleAuthUrlMutation.mutate();
+  };
+
+  return {
+    initiateGoogleLogin,
+    isLoading: getGoogleAuthUrlMutation.isPending,
+  };
+};
