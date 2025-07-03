@@ -46,12 +46,16 @@ export const getSessionTokenFromLocalStorage = () =>
 export const setSessionTokenToLocalStorage = (value: string) => {
   if (isBrowser) {
     localStorage.setItem("sessionToken", value);
+    // Also set cookie for middleware
+    document.cookie = `sessionToken=${value}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
   }
 };
 
 export const removeTokensFromLocalStorage = () => {
   if (isBrowser) {
     localStorage.removeItem("sessionToken");
+    // Also clear cookie
+    document.cookie = "sessionToken=; path=/; max-age=0";
   }
 };
 
