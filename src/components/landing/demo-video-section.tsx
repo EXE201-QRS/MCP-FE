@@ -21,6 +21,7 @@ import {
   YouTubeEmbed,
   getYouTubeThumbnail,
 } from "@/components/ui/youtube-embed";
+import Image from "next/image";
 
 // YouTube Video ID extracted from URL: https://www.youtube.com/watch?v=6ojlM0wTn8o
 const YOUTUBE_VIDEO_ID = "6ojlM0wTn8o";
@@ -65,7 +66,7 @@ export function DemoVideoSection() {
             <CardContent className="p-0 relative">
               <div className="relative aspect-video bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900">
                 {/* YouTube Thumbnail */}
-                <img
+                <Image
                   src={thumbnailUrl}
                   alt="QOS Scanorderly Demo Video Thumbnail"
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
