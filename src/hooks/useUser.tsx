@@ -71,3 +71,9 @@ export const useDeleteUserMutation = () => {
     },
   });
 };
+
+export const useChangePasswordMutation = () => {
+  return useMutation({
+    mutationFn: userApiRequests.changePassword,
+  });
+};

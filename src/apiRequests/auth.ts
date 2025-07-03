@@ -40,7 +40,7 @@ const authApiRequest = {
       baseUrl: "",
     }),
   sUpdateProfile: (body: UpdateProfileBodyType) =>
-    http.put<UpdateProfileResType>("/auth/profile", body),
+    http.put<UpdateProfileResType>("/auth/me", body),
 };
 
 export default authApiRequest;

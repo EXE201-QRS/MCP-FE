@@ -1,7 +1,10 @@
 import authApiRequest from "@/apiRequests/auth";
+import {
+  getSessionTokenFromLocalStorage,
+  removeTokensFromLocalStorage,
+} from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth.store";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getSessionTokenFromLocalStorage, removeTokensFromLocalStorage } from "@/lib/utils";
 import { useEffect } from "react";
 
 export const useLoginMutation = () => {
@@ -48,7 +51,7 @@ export const useUpdateProfileMutation = () => {
 
 export const useAccountMe = () => {
   const { setUser, setIsAuthenticated, setIsLoading } = useAuthStore();
-  
+
   const query = useQuery({
     queryKey: ["account-me"],
     queryFn: authApiRequest.me,
@@ -61,18 +64,25 @@ export const useAccountMe = () => {
     if (query.isLoading) {
       setIsLoading(true);
     } else if (query.isError) {
-      console.error('❌ Failed to fetch user profile:', query.error);
       removeTokensFromLocalStorage();
       setUser(null);
       setIsAuthenticated(false);
       setIsLoading(false);
     } else if (query.isSuccess && query.data) {
-      console.log('✅ User profile fetched successfully:', query.data.payload.data);
       setUser(query.data.payload.data);
       setIsAuthenticated(true);
       setIsLoading(false);
     }
-  }, [query.isLoading, query.isError, query.isSuccess, query.data, query.error, setUser, setIsAuthenticated, setIsLoading]);
+  }, [
+    query.isLoading,
+    query.isError,
+    query.isSuccess,
+    query.data,
+    query.error,
+    setUser,
+    setIsAuthenticated,
+    setIsLoading,
+  ]);
 
   return query;
 };
@@ -82,7 +92,7 @@ export const useAccountMe = () => {
  */
 export const useRefreshAuth = () => {
   const queryClient = useQueryClient();
-  
+
   const refreshAuth = async () => {
     const token = getSessionTokenFromLocalStorage();
     if (token) {

@@ -4,8 +4,15 @@ import { z } from "zod";
 
 export const UpdateProfileBodySchema = z
   .object({
-    name: z.string().min(1, "Họ và tên là bắt buộc").max(100, "Họ và tên không được quá 100 ký tự"),
-    phoneNumber: z.string().min(9, "Số điện thoại phải có ít nhất 9 số").max(15, "Số điện thoại không được quá 15 số"),
+    name: z
+      .string()
+      .min(1, "Họ và tên là bắt buộc")
+      .max(100, "Họ và tên không được quá 100 ký tự"),
+    phoneNumber: z
+      .string()
+      .min(9, "Số điện thoại phải có ít nhất 9 số")
+      .max(15, "Số điện thoại không được quá 15 số"),
+    avatar: z.string().url("Ảnh đại diện phải là một URL hợp lệ").optional(),
   })
   .strict();
 
