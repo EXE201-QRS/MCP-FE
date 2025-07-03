@@ -13,7 +13,7 @@ interface StarRatingProps {
 const sizeClasses = {
   sm: "size-3",
   md: "size-4", 
-  lg: "size-5",
+  lg: "size-6",
 };
 
 export function StarRating({

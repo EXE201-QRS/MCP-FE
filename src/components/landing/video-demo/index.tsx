@@ -17,6 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import Image from "next/image";
 
 // YouTube Video ID extracted from URL: https://www.youtube.com/watch?v=6ojlM0wTn8o
 const YOUTUBE_VIDEO_ID = "6ojlM0wTn8o";
@@ -28,22 +29,24 @@ interface YouTubeEmbedProps {
   className?: string;
 }
 
-function YouTubeEmbed({ 
-  videoId, 
-  autoplay = false, 
+function YouTubeEmbed({
+  videoId,
+  autoplay = false,
   muted = true,
-  className = "" 
+  className = "",
 }: YouTubeEmbedProps) {
-  const embedUrl = `https://www.youtube.com/embed/${videoId}?${new URLSearchParams({
-    autoplay: autoplay ? "1" : "0",
-    mute: muted ? "1" : "0",
-    rel: "0", // Don't show related videos
-    modestbranding: "1", // Minimal YouTube branding
-    fs: "1", // Allow fullscreen
-    cc_load_policy: "1", // Show captions by default
-    iv_load_policy: "3", // Hide video annotations
-    controls: "1", // Show player controls
-  }).toString()}`;
+  const embedUrl = `https://www.youtube.com/embed/${videoId}?${new URLSearchParams(
+    {
+      autoplay: autoplay ? "1" : "0",
+      mute: muted ? "1" : "0",
+      rel: "0", // Don't show related videos
+      modestbranding: "1", // Minimal YouTube branding
+      fs: "1", // Allow fullscreen
+      cc_load_policy: "1", // Show captions by default
+      iv_load_policy: "3", // Hide video annotations
+      controls: "1", // Show player controls
+    }
+  ).toString()}`;
 
   return (
     <iframe
@@ -81,16 +84,16 @@ export function VideoDemo() {
         <CardContent className="p-0 relative">
           <div className="relative aspect-video bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900">
             {/* YouTube Thumbnail */}
-            <img
+            <Image
               src={thumbnailUrl}
               alt="QOS Scanorderly Demo Video Thumbnail"
               className="absolute inset-0 w-full h-full object-cover"
               onError={(e) => {
                 // Fallback if thumbnail fails to load
-                e.currentTarget.style.display = 'none';
+                e.currentTarget.style.display = "none";
               }}
             />
-            
+
             {/* Fallback content if thumbnail fails */}
             <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900">
               <div className="text-center">
@@ -167,13 +170,13 @@ export function VideoDemo() {
           <div className="px-6 pb-6">
             <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
               {showVideo ? (
-                <YouTubeEmbed 
+                <YouTubeEmbed
                   videoId={YOUTUBE_VIDEO_ID}
                   autoplay={true}
                   muted={isMuted}
                 />
               ) : (
-                <div 
+                <div
                   className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900 cursor-pointer"
                   onClick={() => setShowVideo(true)}
                 >
@@ -196,26 +199,31 @@ export function VideoDemo() {
             <div className="mt-4 space-y-3">
               <h3 className="font-semibold">Về video demo này:</h3>
               <p className="text-sm text-muted-foreground">
-                Video này giới thiệu chi tiết cách QOS Scanorderly hoạt động, 
-                từ quá trình setup, quản lý nhà hàng đến trải nghiệm đặt món của khách hàng.
+                Video này giới thiệu chi tiết cách QOS Scanorderly hoạt động, từ
+                quá trình setup, quản lý nhà hàng đến trải nghiệm đặt món của
+                khách hàng.
               </p>
-              
+
               {/* Demo Links */}
               <div className="flex flex-col sm:flex-row gap-2 pt-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => window.open("https://demo.scanorderly.com", "_blank")}
+                  onClick={() =>
+                    window.open("https://demo.scanorderly.com", "_blank")
+                  }
                 >
                   Mở Demo Dashboard
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => window.open(
-                    "https://demo.scanorderly.com/tables/1?token=table_1750517462872_f25nme3tvwp",
-                    "_blank"
-                  )}
+                  onClick={() =>
+                    window.open(
+                      "https://demo.scanorderly.com/tables/1?token=table_1750517462872_f25nme3tvwp",
+                      "_blank"
+                    )
+                  }
                 >
                   Trải nghiệm đặt món
                 </Button>
