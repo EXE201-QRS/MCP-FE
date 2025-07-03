@@ -41,6 +41,10 @@ const authApiRequest = {
     }),
   sUpdateProfile: (body: UpdateProfileBodyType) =>
     http.put<UpdateProfileResType>("/auth/me", body),
+  
+  // OAuth Google
+  getGoogleAuthUrl: () => 
+    http.get<{ url: string }>("/auth/google-link"),
 };
 
 export default authApiRequest;

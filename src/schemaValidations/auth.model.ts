@@ -111,3 +111,10 @@ export type GetAccountProfileResType = z.infer<
 >;
 export type UpdateProfileBodyType = z.infer<typeof UpdateProfileBodySchema>;
 export type UpdateProfileResType = z.infer<typeof UpdateProfileResSchema>;
+
+// Google OAuth types
+export const GoogleAuthUrlResSchema = z.object({
+  url: z.string().url()
+});
+
+export type GoogleAuthUrlResType = z.infer<typeof GoogleAuthUrlResSchema>;
