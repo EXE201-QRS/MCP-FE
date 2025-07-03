@@ -1,5 +1,6 @@
 import http from "@/lib/http";
 import {
+  ChangePasswordBodyType,
   CreateUserBodyType,
   CreateUserResType,
   GetUserProfileResType,
@@ -18,5 +19,8 @@ const userApiRequests = {
     http.put<UpdateUserResType>(`${prefix}/${id}`, body),
   getUser: (id: number) => http.get<GetUserProfileResType>(`${prefix}/${id}`),
   deleteUser: (id: number) => http.delete(`${prefix}/${id}`),
+  //Change Password
+  changePassword: (body: ChangePasswordBodyType) =>
+    http.put(`${prefix}/change-password`, body),
 };
 export default userApiRequests;
