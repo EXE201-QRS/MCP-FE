@@ -11,7 +11,11 @@ export const UserSchema = z.object({
     .nullable(),
   roleName: z.enum([Role.ADMIN_SYSTEM, Role.CUSTOMER]).default(Role.CUSTOMER),
   password: z.string().min(6).max(100).optional(),
-  phoneNumber: z.string().min(9).max(15).nullable(),
+  phoneNumber: z.string()
+    .min(9, "Phone number must be at least 9 characters")
+    .max(15, "Phone number must not exceed 15 characters")
+    .transform((val) => (val === "" ? null : val))
+    .nullable(),
   avatar: z.string().nullable(),
   createdById: z.number().nullable(),
   updatedById: z.number().nullable(),
