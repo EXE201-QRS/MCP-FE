@@ -102,12 +102,12 @@ const data = {
   ],
   navSecondary: [
     {
-      title: "Settings",
+      title: "Cài đặt",
       url: "/manage/settings",
       icon: IconSettings,
     },
     {
-      title: "Search",
+      title: "Tìm kiếm nhanh",
       url: "/manage/search",
       icon: IconSearch,
     },
@@ -135,7 +135,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user } = useAuth();
 
   const defaultUser = {
-    name: user?.name || user?.email?.split('@')[0] || "Admin User",
+    name: user?.name || user?.email?.split("@")[0] || "Admin User",
     email: user?.email || "admin@mcpqos.com",
     avatar: user?.avatar || "",
   };
