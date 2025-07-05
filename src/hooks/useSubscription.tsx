@@ -70,24 +70,38 @@ export const useSubscription = (id: number) => {
   });
 };
 
-// Admin hook for subscription statistics
+// Admin hook for subscription statistics - Get overview of entire system
 export const useSubscriptionStats = () => {
   return useQuery({
     queryKey: ["subscription-stats"],
     queryFn: async () => {
-      const response = await subscriptionApiRequests.adminListAll({ page: 1, limit: 1000 });
+      // Lấy tất cả subscription với limit lớn để có thống kê đầy đủ
+      const response = await subscriptionApiRequests.adminListAll({ page: 1, limit: 10000 });
       const subscriptions = response.payload?.data || [];
       
       return {
-        total: subscriptions.length,
+        total: response.payload?.totalItems || 0, // Sử dụng totalItems từ API
         active: subscriptions.filter(s => s.status === 'ACTIVE').length,
         pending: subscriptions.filter(s => s.status === 'PENDING').length,
+        paid: subscriptions.filter(s => s.status === 'PAID').length,
         expired: subscriptions.filter(s => s.status === 'EXPIRED').length,
+        cancelled: subscriptions.filter(s => s.status === 'CANCELLED').length,
         revenue: subscriptions
           .filter(s => s.status === 'PAID' || s.status === 'ACTIVE')
           .reduce((sum, s) => sum + (s.servicePlan?.price || 0), 0),
+        // Thêm thông tin chi tiết
+        revenueThisMonth: subscriptions
+          .filter(s => {
+            const isActiveOrPaid = s.status === 'PAID' || s.status === 'ACTIVE';
+            const createdThisMonth = new Date(s.createdAt).getMonth() === new Date().getMonth();
+            return isActiveOrPaid && createdThisMonth;
+          })
+          .reduce((sum, s) => sum + (s.servicePlan?.price || 0), 0),
       };
     },
+    // Cache cho 2 phút vì thống kê không cần realtime
+    staleTime: 2 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
   });
 };
 

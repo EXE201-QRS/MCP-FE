@@ -25,7 +25,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useGetAdminSubscriptionList } from "@/hooks/useSubscription";
+import { PaginationControls, PaginationInfo } from "@/components/common/pagination-controls";
+import { PageSizeSelector } from "@/components/common/page-size-selector";
+import { useGetAdminSubscriptionList, useSubscriptionStats } from "@/hooks/useSubscription";
+import { usePagination, useClientFilter } from "@/hooks/usePagination";
 import {
   IconBuildingStore,
   IconCreditCard,
@@ -39,7 +42,7 @@ import {
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { toast } from "sonner";
 
 const getStatusBadge = (status: string) => {
@@ -91,8 +94,18 @@ const getStatusBadge = (status: string) => {
 export default function AdminSubscriptionsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 10;
+  
+  // Use pagination hook
+  const {
+    currentPage,
+    pageSize,
+    handlePageChange,
+    handlePageSizeChange,
+    resetPagination,
+  } = usePagination({
+    initialPage: 1,
+    initialPageSize: 10,
+  });
 
   const {
     data: subscriptionsData,
@@ -104,6 +117,23 @@ export default function AdminSubscriptionsPage() {
     limit: pageSize,
   });
 
+  // Lấy thống kê tổng quan của toàn hệ thống
+  const {
+    data: globalStats,
+    isLoading: isLoadingStats,
+    refetch: refetchStats
+  } = useSubscriptionStats();
+
+  // Client-side filtering for current page data
+  const rawData = subscriptionsData?.payload?.data || [];
+  const filteredSubscriptions = useClientFilter({
+    data: rawData,
+    searchTerm,
+    statusFilter,
+    searchFields: ['restaurantName', 'user.email', 'servicePlan.name'],
+    statusField: 'status',
+  });
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
@@ -111,40 +141,60 @@ export default function AdminSubscriptionsPage() {
     }).format(amount);
   };
 
-  // Filter data based on search and status
-  const filteredSubscriptions =
-    subscriptionsData?.payload?.data?.filter((subscription) => {
-      const matchesSearch =
-        subscription.restaurantName
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        subscription.user?.email
-          ?.toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        subscription.servicePlan?.name
-          ?.toLowerCase()
-          .includes(searchTerm.toLowerCase());
+  // Calculate statistics from current page data (for display purposes)
+  const currentPageStats = useMemo(() => {
+    return {
+      totalSubscriptions: rawData.length,
+      activeSubscriptions: rawData.filter((s) => s.status === "ACTIVE").length,
+      pendingSubscriptions: rawData.filter((s) => s.status === "PENDING").length,
+      totalRevenue: rawData.reduce((sum, s) => {
+        return s.status === "PAID" || s.status === "ACTIVE"
+          ? sum + (s.servicePlan?.price || 0)
+          : sum;
+      }, 0),
+    };
+  }, [rawData]);
 
-      const matchesStatus =
-        statusFilter === "all" || subscription.status === statusFilter;
+  const handleRefresh = async () => {
+    try {
+      // Refresh cả dữ liệu trang và thống kê
+      await Promise.all([refetch(), refetchStats()]);
+      toast.success('Đã cập nhật dữ liệu thành công!');
+    } catch (error) {
+      toast.error('Có lỗi xảy ra khi tải dữ liệu');
+    }
+  };
 
-      return matchesSearch && matchesStatus;
-    }) || [];
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    // Don't reset pagination for search to allow search within current page
+  };
 
-  // Calculate statistics
-  const totalSubscriptions = subscriptionsData?.payload?.data?.length || 0;
-  const activeSubscriptions =
-    subscriptionsData?.payload?.data?.filter((s) => s.status === "ACTIVE")
-      .length || 0;
-  const pendingSubscriptions =
-    subscriptionsData?.payload?.data?.filter((s) => s.status === "PENDING")
-      .length || 0;
-  const totalRevenue =
-    subscriptionsData?.payload?.data?.reduce((sum, s) => {
-      return s.status === "PAID" || s.status === "ACTIVE"
-        ? sum + (s.servicePlan?.price || 0)
-        : sum;
-    }, 0) || 0;
+  const handleStatusFilterChange = (value: string) => {
+    setStatusFilter(value);
+    // Don't reset pagination for filter to allow filter within current page
+  };
+
+  const handleClearFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("all");
+  };
+
+  // Pagination data from API response
+  const paginationData = subscriptionsData?.payload ? {
+    currentPage: subscriptionsData.payload.page,
+    totalPages: subscriptionsData.payload.totalPages,
+    totalItems: subscriptionsData.payload.totalItems,
+    limit: subscriptionsData.payload.limit,
+  } : {
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    limit: pageSize,
+  };
+
+  const hasFilters = searchTerm || statusFilter !== "all";
+  const showingFiltered = hasFilters && filteredSubscriptions.length !== rawData.length;
 
   return (
     <div className="space-y-6 p-6">
@@ -159,33 +209,32 @@ export default function AdminSubscriptionsPage() {
           </p>
         </div>
         <Button 
-          onClick={async () => {
-            try {
-              await refetch();
-              toast.success('Đã cập nhật dữ liệu thành công!');
-            } catch (error) {
-              toast.error('Có lỗi xảy ra khi tải dữ liệu');
-            }
-          }} 
+          onClick={handleRefresh} 
           variant="outline" 
-          disabled={isFetching}
+          disabled={isFetching || isLoadingStats}
         >
-          <IconRefresh className={`size-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
-          {isFetching ? 'Đang tải...' : 'Làm mới'}
+          <IconRefresh className={`size-4 mr-2 ${isFetching || isLoadingStats ? 'animate-spin' : ''}`} />
+          {isFetching || isLoadingStats ? 'Đang tải...' : 'Làm mới'}
         </Button>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {/* Global Stats - Toàn hệ thống */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Tổng đăng ký</CardTitle>
             <IconPackages className="size-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalSubscriptions}</div>
+            <div className="text-2xl font-bold">
+              {isLoadingStats ? (
+                <div className="h-8 w-16 bg-muted animate-pulse rounded" />
+              ) : (
+                globalStats?.total || 0
+              )}
+            </div>
             <p className="text-xs text-muted-foreground">
-              Tất cả đăng ký dịch vụ
+              Tất cả đăng ký trong hệ thống
             </p>
           </CardContent>
         </Card>
@@ -199,10 +248,14 @@ export default function AdminSubscriptionsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {activeSubscriptions}
+              {isLoadingStats ? (
+                <div className="h-8 w-16 bg-muted animate-pulse rounded" />
+              ) : (
+                globalStats?.active || 0
+              )}
             </div>
             <p className="text-xs text-muted-foreground">
-              Nhà hàng đang sử dụng
+              Nhà hàng đang sử dụng dịch vụ
             </p>
           </CardContent>
         </Card>
@@ -216,23 +269,48 @@ export default function AdminSubscriptionsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-600">
-              {pendingSubscriptions}
+              {isLoadingStats ? (
+                <div className="h-8 w-16 bg-muted animate-pulse rounded" />
+              ) : (
+                globalStats?.pending || 0
+              )}
             </div>
-            <p className="text-xs text-muted-foreground">Cần xử lý</p>
+            <p className="text-xs text-muted-foreground">Cần xử lý thanh toán</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Doanh thu</CardTitle>
+            <CardTitle className="text-sm font-medium">Hết hạn</CardTitle>
+            <IconPackages className="size-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">
+              {isLoadingStats ? (
+                <div className="h-8 w-16 bg-muted animate-pulse rounded" />
+              ) : (
+                globalStats?.expired || 0
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">Cần gia hạn hoặc hủy</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Tổng doanh thu</CardTitle>
             <IconTrendingUp className="size-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
-              {formatCurrency(totalRevenue)}
+              {isLoadingStats ? (
+                <div className="h-8 w-20 bg-muted animate-pulse rounded" />
+              ) : (
+                formatCurrency(globalStats?.revenue || 0)
+              )}
             </div>
             <p className="text-xs text-muted-foreground">
-              Từ đăng ký đã thanh toán
+              Từ tất cả đăng ký đã thanh toán
             </p>
           </CardContent>
         </Card>
@@ -241,10 +319,21 @@ export default function AdminSubscriptionsPage() {
       {/* Filters and Search */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <IconFilter className="size-5" />
-            Bộ lọc và tìm kiếm
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <IconFilter className="size-5" />
+              <CardTitle>Bộ lọc và tìm kiếm</CardTitle>
+            </div>
+            {hasFilters && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleClearFilters}
+              >
+                Xóa bộ lọc
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-4">
@@ -254,12 +343,12 @@ export default function AdminSubscriptionsPage() {
                 <Input
                   placeholder="Tìm theo tên nhà hàng, email khách hàng, gói dịch vụ..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => handleSearchChange(e.target.value)}
                   className="pl-10"
                 />
               </div>
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Trạng thái" />
               </SelectTrigger>
@@ -279,12 +368,34 @@ export default function AdminSubscriptionsPage() {
       {/* Subscriptions Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Danh sách đăng ký</CardTitle>
-          <CardDescription>
-            {filteredSubscriptions.length} kết quả
-            {searchTerm && ` cho "${searchTerm}"`}
-            {statusFilter !== "all" && ` với trạng thái "${statusFilter}"`}
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Danh sách đăng ký</CardTitle>
+              <CardDescription>
+                {showingFiltered ? (
+                  <>
+                    Hiển thị {filteredSubscriptions.length} / {rawData.length} kết quả trên trang này
+                    {searchTerm && ` cho "${searchTerm}"`}
+                    {statusFilter !== "all" && ` với trạng thái "${statusFilter}"`}
+                    <span className="text-orange-600"> (lọc client-side)</span>
+                  </>
+                ) : (
+                  <>
+                    {filteredSubscriptions.length} kết quả trên trang này
+                  </>
+                )}
+              </CardDescription>
+            </div>
+            {/* Page Size Selector ở góc phải */}
+            {!isLoading && paginationData.totalItems > 0 && (
+              <PageSizeSelector
+                pageSize={pageSize}
+                onPageSizeChange={handlePageSizeChange}
+                options={[5, 10, 20, 50]}
+                disabled={isFetching}
+              />
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -300,15 +411,20 @@ export default function AdminSubscriptionsPage() {
             <div className="text-center py-12">
               <IconPackages className="size-16 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">
-                {searchTerm || statusFilter !== "all"
+                {hasFilters
                   ? "Không tìm thấy kết quả"
                   : "Chưa có đăng ký nào"}
               </h3>
-              <p className="text-muted-foreground">
-                {searchTerm || statusFilter !== "all"
+              <p className="text-muted-foreground mb-4">
+                {hasFilters
                   ? "Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm"
                   : "Đăng ký đầu tiên sẽ xuất hiện ở đây"}
               </p>
+              {hasFilters && (
+                <Button onClick={handleClearFilters} variant="outline">
+                  Xóa bộ lọc
+                </Button>
+              )}
             </div>
           ) : (
             <div className="space-y-4">
@@ -394,7 +510,9 @@ export default function AdminSubscriptionsPage() {
                           {formatCurrency(subscription.servicePlan?.price || 0)}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          /tháng
+                          /{subscription.durationDays === 'ONE_MONTH' ? 'tháng' : 
+                            subscription.durationDays === 'THREE_MONTHS' ? '3 tháng' : 
+                            '6 tháng'}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -415,6 +533,38 @@ export default function AdminSubscriptionsPage() {
                   ))}
                 </TableBody>
               </Table>
+              
+              {/* Pagination info và navigation trong table */}
+              {!isLoading && paginationData.totalItems > 0 && (
+                <div className="border-t pt-4">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <PaginationInfo
+                        currentPage={paginationData.currentPage}
+                        totalPages={paginationData.totalPages}
+                        totalItems={paginationData.totalItems}
+                        limit={paginationData.limit}
+                        itemName="đăng ký"
+                      />
+                      {hasFilters && (
+                        <div className="text-sm text-orange-600">
+                          Lọc: {filteredSubscriptions.length} kết quả
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      {paginationData.totalPages > 1 && (
+                        <PaginationControls
+                          currentPage={paginationData.currentPage}
+                          totalPages={paginationData.totalPages}
+                          onPageChange={handlePageChange}
+                          disabled={isFetching}
+                        />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
