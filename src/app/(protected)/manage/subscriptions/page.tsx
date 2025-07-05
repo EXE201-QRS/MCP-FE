@@ -1,5 +1,10 @@
 "use client";
 
+import { PageSizeSelector } from "@/components/common/page-size-selector";
+import {
+  PaginationControls,
+  PaginationInfo,
+} from "@/components/common/pagination-controls";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,10 +30,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PaginationControls, PaginationInfo } from "@/components/common/pagination-controls";
-import { PageSizeSelector } from "@/components/common/page-size-selector";
-import { useGetAdminSubscriptionList, useSubscriptionStats } from "@/hooks/useSubscription";
-import { usePagination, useClientFilter } from "@/hooks/usePagination";
+import { useClientFilter, usePagination } from "@/hooks/usePagination";
+import {
+  useGetAdminSubscriptionList,
+  useSubscriptionStats,
+} from "@/hooks/useSubscription";
 import {
   IconBuildingStore,
   IconCreditCard,
@@ -42,7 +48,7 @@ import {
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import Link from "next/link";
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 const getStatusBadge = (status: string) => {
@@ -94,7 +100,7 @@ const getStatusBadge = (status: string) => {
 export default function AdminSubscriptionsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  
+
   // Use pagination hook
   const {
     currentPage,
@@ -121,7 +127,7 @@ export default function AdminSubscriptionsPage() {
   const {
     data: globalStats,
     isLoading: isLoadingStats,
-    refetch: refetchStats
+    refetch: refetchStats,
   } = useSubscriptionStats();
 
   // Client-side filtering for current page data
@@ -130,8 +136,8 @@ export default function AdminSubscriptionsPage() {
     data: rawData,
     searchTerm,
     statusFilter,
-    searchFields: ['restaurantName', 'user.email', 'servicePlan.name'],
-    statusField: 'status',
+    searchFields: ["restaurantName", "user.email", "servicePlan.name"],
+    statusField: "status",
   });
 
   const formatCurrency = (amount: number) => {
@@ -146,7 +152,8 @@ export default function AdminSubscriptionsPage() {
     return {
       totalSubscriptions: rawData.length,
       activeSubscriptions: rawData.filter((s) => s.status === "ACTIVE").length,
-      pendingSubscriptions: rawData.filter((s) => s.status === "PENDING").length,
+      pendingSubscriptions: rawData.filter((s) => s.status === "PENDING")
+        .length,
       totalRevenue: rawData.reduce((sum, s) => {
         return s.status === "PAID" || s.status === "ACTIVE"
           ? sum + (s.servicePlan?.price || 0)
@@ -159,9 +166,9 @@ export default function AdminSubscriptionsPage() {
     try {
       // Refresh cả dữ liệu trang và thống kê
       await Promise.all([refetch(), refetchStats()]);
-      toast.success('Đã cập nhật dữ liệu thành công!');
+      toast.success("Đã cập nhật dữ liệu thành công!");
     } catch (error) {
-      toast.error('Có lỗi xảy ra khi tải dữ liệu');
+      toast.error("Có lỗi xảy ra khi tải dữ liệu");
     }
   };
 
@@ -181,20 +188,23 @@ export default function AdminSubscriptionsPage() {
   };
 
   // Pagination data from API response
-  const paginationData = subscriptionsData?.payload ? {
-    currentPage: subscriptionsData.payload.page,
-    totalPages: subscriptionsData.payload.totalPages,
-    totalItems: subscriptionsData.payload.totalItems,
-    limit: subscriptionsData.payload.limit,
-  } : {
-    currentPage: 1,
-    totalPages: 1,
-    totalItems: 0,
-    limit: pageSize,
-  };
+  const paginationData = subscriptionsData?.payload
+    ? {
+        currentPage: subscriptionsData.payload.page,
+        totalPages: subscriptionsData.payload.totalPages,
+        totalItems: subscriptionsData.payload.totalItems,
+        limit: subscriptionsData.payload.limit,
+      }
+    : {
+        currentPage: 1,
+        totalPages: 1,
+        totalItems: 0,
+        limit: pageSize,
+      };
 
   const hasFilters = searchTerm || statusFilter !== "all";
-  const showingFiltered = hasFilters && filteredSubscriptions.length !== rawData.length;
+  const showingFiltered =
+    hasFilters && filteredSubscriptions.length !== rawData.length;
 
   return (
     <div className="space-y-6 p-6">
@@ -208,13 +218,15 @@ export default function AdminSubscriptionsPage() {
             Theo dõi và quản lý tất cả đăng ký dịch vụ của khách hàng
           </p>
         </div>
-        <Button 
-          onClick={handleRefresh} 
-          variant="outline" 
+        <Button
+          onClick={handleRefresh}
+          variant="outline"
           disabled={isFetching || isLoadingStats}
         >
-          <IconRefresh className={`size-4 mr-2 ${isFetching || isLoadingStats ? 'animate-spin' : ''}`} />
-          {isFetching || isLoadingStats ? 'Đang tải...' : 'Làm mới'}
+          <IconRefresh
+            className={`size-4 mr-2 ${isFetching || isLoadingStats ? "animate-spin" : ""}`}
+          />
+          {isFetching || isLoadingStats ? "Đang tải..." : "Làm mới"}
         </Button>
       </div>
 
@@ -275,7 +287,9 @@ export default function AdminSubscriptionsPage() {
                 globalStats?.pending || 0
               )}
             </div>
-            <p className="text-xs text-muted-foreground">Cần xử lý thanh toán</p>
+            <p className="text-xs text-muted-foreground">
+              Cần xử lý thanh toán
+            </p>
           </CardContent>
         </Card>
 
@@ -292,13 +306,17 @@ export default function AdminSubscriptionsPage() {
                 globalStats?.expired || 0
               )}
             </div>
-            <p className="text-xs text-muted-foreground">Cần gia hạn hoặc hủy</p>
+            <p className="text-xs text-muted-foreground">
+              Cần gia hạn hoặc hủy
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tổng doanh thu</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Tổng doanh thu
+            </CardTitle>
             <IconTrendingUp className="size-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -325,11 +343,7 @@ export default function AdminSubscriptionsPage() {
               <CardTitle>Bộ lọc và tìm kiếm</CardTitle>
             </div>
             {hasFilters && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleClearFilters}
-              >
+              <Button variant="outline" size="sm" onClick={handleClearFilters}>
                 Xóa bộ lọc
               </Button>
             )}
@@ -348,7 +362,10 @@ export default function AdminSubscriptionsPage() {
                 />
               </div>
             </div>
-            <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
+            <Select
+              value={statusFilter}
+              onValueChange={handleStatusFilterChange}
+            >
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Trạng thái" />
               </SelectTrigger>
@@ -374,15 +391,14 @@ export default function AdminSubscriptionsPage() {
               <CardDescription>
                 {showingFiltered ? (
                   <>
-                    Hiển thị {filteredSubscriptions.length} / {rawData.length} kết quả trên trang này
+                    Hiển thị {filteredSubscriptions.length} / {rawData.length}{" "}
+                    kết quả trên trang này
                     {searchTerm && ` cho "${searchTerm}"`}
-                    {statusFilter !== "all" && ` với trạng thái "${statusFilter}"`}
-                    <span className="text-orange-600"> (lọc client-side)</span>
+                    {statusFilter !== "all" &&
+                      ` với trạng thái "${statusFilter}"`}
                   </>
                 ) : (
-                  <>
-                    {filteredSubscriptions.length} kết quả trên trang này
-                  </>
+                  <>{filteredSubscriptions.length} kết quả trên trang này</>
                 )}
               </CardDescription>
             </div>
@@ -411,9 +427,7 @@ export default function AdminSubscriptionsPage() {
             <div className="text-center py-12">
               <IconPackages className="size-16 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">
-                {hasFilters
-                  ? "Không tìm thấy kết quả"
-                  : "Chưa có đăng ký nào"}
+                {hasFilters ? "Không tìm thấy kết quả" : "Chưa có đăng ký nào"}
               </h3>
               <p className="text-muted-foreground mb-4">
                 {hasFilters
@@ -510,9 +524,12 @@ export default function AdminSubscriptionsPage() {
                           {formatCurrency(subscription.servicePlan?.price || 0)}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          /{subscription.durationDays === 'ONE_MONTH' ? 'tháng' : 
-                            subscription.durationDays === 'THREE_MONTHS' ? '3 tháng' : 
-                            '6 tháng'}
+                          /
+                          {subscription.durationDays === "ONE_MONTH"
+                            ? "tháng"
+                            : subscription.durationDays === "THREE_MONTHS"
+                              ? "3 tháng"
+                              : "6 tháng"}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -533,7 +550,7 @@ export default function AdminSubscriptionsPage() {
                   ))}
                 </TableBody>
               </Table>
-              
+
               {/* Pagination info và navigation trong table */}
               {!isLoading && paginationData.totalItems > 0 && (
                 <div className="border-t pt-4">

@@ -1,6 +1,15 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
+import { PageSizeSelector } from "@/components/common/page-size-selector";
+import {
+  PaginationControls,
+  PaginationInfo,
+} from "@/components/common/pagination-controls";
+import {
+  ReviewStatusBadge,
+  ReviewTypeBadge,
+  StarRating,
+} from "@/components/review";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -34,18 +43,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { PaginationControls, PaginationInfo } from "@/components/common/pagination-controls";
-import { PageSizeSelector } from "@/components/common/page-size-selector";
-import { StarRating, ReviewStatusBadge, ReviewTypeBadge } from "@/components/review";
-import { ReviewFor, ReviewStatus } from "@/constants/review.constant";
+import { useClientFilter, usePagination } from "@/hooks/usePagination";
 import {
   useAdminResponseMutation,
   useGetReviewList,
   useReviewStats,
   useTogglePublicMutation,
 } from "@/hooks/useReview";
-import { usePagination, useClientFilter } from "@/hooks/usePagination";
-import { cn } from "@/lib/utils";
 import { AdminResponseReviewBodyType } from "@/schemaValidations/review.model";
 import {
   IconCheck,
@@ -59,12 +63,11 @@ import {
   IconStar,
   IconThumbDown,
   IconUsers,
-  IconX,
 } from "@tabler/icons-react";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import Link from "next/link";
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 interface AdminResponseDialogProps {
@@ -199,23 +202,19 @@ export default function AdminReviewsPage() {
   const [responseDialogOpen, setResponseDialogOpen] = useState(false);
 
   // Use pagination hook
-  const {
-    currentPage,
-    pageSize,
-    handlePageChange,
-    handlePageSizeChange,
-  } = usePagination({
-    initialPage: 1,
-    initialPageSize: 10,
-  });
+  const { currentPage, pageSize, handlePageChange, handlePageSizeChange } =
+    usePagination({
+      initialPage: 1,
+      initialPageSize: 10,
+    });
 
   // Hooks - Global stats
   const {
     data: globalStats,
     isLoading: isLoadingStats,
-    refetch: refetchStats
+    refetch: refetchStats,
   } = useReviewStats();
-  
+
   const togglePublicMutation = useTogglePublicMutation();
 
   const {
@@ -228,7 +227,8 @@ export default function AdminReviewsPage() {
     limit: pageSize,
     ...(statusFilter !== "all" && { status: statusFilter as any }),
     ...(reviewForFilter !== "all" && { reviewFor: reviewForFilter as any }),
-    ...(ratingFilter !== "all" && !isNaN(parseInt(ratingFilter)) && { rating: parseInt(ratingFilter) }),
+    ...(ratingFilter !== "all" &&
+      !isNaN(parseInt(ratingFilter)) && { rating: parseInt(ratingFilter) }),
     ...(searchTerm && searchTerm.trim() && { search: searchTerm.trim() }),
   });
 
@@ -238,16 +238,19 @@ export default function AdminReviewsPage() {
     data: rawData,
     searchTerm,
     statusFilter,
-    searchFields: ['content', 'user.name', 'subscription.restaurantName'],
-    statusField: 'status',
+    searchFields: ["content", "user.name", "subscription.restaurantName"],
+    statusField: "status",
   });
 
   // Calculate average rating from current page data
   const currentPageStats = useMemo(() => {
-    const avgRating = rawData.length > 0
-      ? (rawData.reduce((sum, r) => sum + r.rating, 0) / rawData.length).toFixed(1)
-      : "0.0";
-    
+    const avgRating =
+      rawData.length > 0
+        ? (
+            rawData.reduce((sum, r) => sum + r.rating, 0) / rawData.length
+          ).toFixed(1)
+        : "0.0";
+
     return {
       averageRating: avgRating,
       totalCurrentPage: rawData.length,
@@ -258,9 +261,9 @@ export default function AdminReviewsPage() {
     try {
       // Refresh cả dữ liệu trang và thống kê
       await Promise.all([refetch(), refetchStats()]);
-      toast.success('Đã cập nhật dữ liệu thành công!');
+      toast.success("Đã cập nhật dữ liệu thành công!");
     } catch (error) {
-      toast.error('Có lỗi xảy ra khi tải dữ liệu');
+      toast.error("Có lỗi xảy ra khi tải dữ liệu");
     }
   };
 
@@ -286,27 +289,36 @@ export default function AdminReviewsPage() {
   };
 
   // Pagination data from API response
-  const paginationData = reviewsData?.payload ? {
-    currentPage: reviewsData.payload.page,
-    totalPages: reviewsData.payload.totalPages,
-    totalItems: reviewsData.payload.totalItems,
-    limit: reviewsData.payload.limit,
-  } : {
-    currentPage: 1,
-    totalPages: 1,
-    totalItems: 0,
-    limit: pageSize,
-  };
+  const paginationData = reviewsData?.payload
+    ? {
+        currentPage: reviewsData.payload.page,
+        totalPages: reviewsData.payload.totalPages,
+        totalItems: reviewsData.payload.totalItems,
+        limit: reviewsData.payload.limit,
+      }
+    : {
+        currentPage: 1,
+        totalPages: 1,
+        totalItems: 0,
+        limit: pageSize,
+      };
 
-  const hasFilters = searchTerm || statusFilter !== "all" || reviewForFilter !== "all" || ratingFilter !== "all";
-  const showingFiltered = hasFilters && filteredReviews.length !== rawData.length;
+  const hasFilters =
+    searchTerm ||
+    statusFilter !== "all" ||
+    reviewForFilter !== "all" ||
+    ratingFilter !== "all";
+  const showingFiltered =
+    hasFilters && filteredReviews.length !== rawData.length;
 
   return (
     <div className="space-y-6 p-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">Quản lý đánh giá</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Quản lý đánh giá
+          </h1>
           <p className="text-muted-foreground">
             Quản lý và phản hồi đánh giá từ khách hàng
           </p>
@@ -382,14 +394,18 @@ export default function AdminReviewsPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Đánh giá trung bình</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Đánh giá trung bình
+            </CardTitle>
             <IconStar className="size-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
               {currentPageStats.averageRating}
             </div>
-            <p className="text-xs text-muted-foreground">Điểm đánh giá (trang này)</p>
+            <p className="text-xs text-muted-foreground">
+              Điểm đánh giá (trang này)
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -403,11 +419,7 @@ export default function AdminReviewsPage() {
               <CardTitle>Bộ lọc và tìm kiếm</CardTitle>
             </div>
             {hasFilters && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleClearFilters}
-              >
+              <Button variant="outline" size="sm" onClick={handleClearFilters}>
                 Xóa bộ lọc
               </Button>
             )}
@@ -490,14 +502,12 @@ export default function AdminReviewsPage() {
               <CardDescription>
                 {showingFiltered ? (
                   <>
-                    Hiển thị {filteredReviews.length} / {rawData.length} kết quả trên trang này
+                    Hiển thị {filteredReviews.length} / {rawData.length} kết quả
+                    trên trang này
                     {searchTerm && ` cho "${searchTerm}"`}
-                    <span className="text-orange-600"> (lọc client-side)</span>
                   </>
                 ) : (
-                  <>
-                    {filteredReviews.length} kết quả trên trang này
-                  </>
+                  <>{filteredReviews.length} kết quả trên trang này</>
                 )}
               </CardDescription>
             </div>
@@ -526,9 +536,7 @@ export default function AdminReviewsPage() {
             <div className="text-center py-12">
               <IconMessageCircle className="size-16 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">
-                {hasFilters
-                  ? "Không tìm thấy kết quả"
-                  : "Chưa có đánh giá nào"}
+                {hasFilters ? "Không tìm thấy kết quả" : "Chưa có đánh giá nào"}
               </h3>
               <p className="text-muted-foreground mb-4">
                 {hasFilters
@@ -588,11 +596,15 @@ export default function AdminReviewsPage() {
 
                       <TableCell>
                         <div className="max-w-xs">
-                          <p className="text-sm line-clamp-2">{review.content}</p>
+                          <p className="text-sm line-clamp-2">
+                            {review.content}
+                          </p>
                         </div>
                       </TableCell>
 
-                      <TableCell><ReviewTypeBadge reviewFor={review.reviewFor} /></TableCell>
+                      <TableCell>
+                        <ReviewTypeBadge reviewFor={review.reviewFor} />
+                      </TableCell>
 
                       <TableCell>
                         <div className="text-sm">
@@ -607,7 +619,9 @@ export default function AdminReviewsPage() {
                         </div>
                       </TableCell>
 
-                      <TableCell><ReviewStatusBadge status={review.status} /></TableCell>
+                      <TableCell>
+                        <ReviewStatusBadge status={review.status} />
+                      </TableCell>
 
                       <TableCell>
                         <Button
@@ -650,7 +664,7 @@ export default function AdminReviewsPage() {
                   ))}
                 </TableBody>
               </Table>
-              
+
               {/* Pagination info và navigation trong table */}
               {!isLoading && paginationData.totalItems > 0 && (
                 <div className="border-t pt-4">
