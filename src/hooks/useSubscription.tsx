@@ -75,8 +75,8 @@ export const useSubscriptionStats = () => {
   return useQuery({
     queryKey: ["subscription-stats"],
     queryFn: async () => {
-      // Lấy tất cả subscription với limit lớn để có thống kê đầy đủ
-      const response = await subscriptionApiRequests.adminListAll({ page: 1, limit: 10000 });
+      // Lấy tất cả subscription với limit tối đa để có thống kê đầy đủ
+      const response = await subscriptionApiRequests.adminListAll({ page: 1, limit: 100 });
       const subscriptions = response.payload?.data || [];
       
       return {
