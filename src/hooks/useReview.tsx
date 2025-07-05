@@ -150,18 +150,26 @@ export const useDeleteReviewMutation = () => {
   });
 };
 
-// Utility hooks for specific use cases
+// Hook for getting comprehensive review statistics
 export const useReviewStats = () => {
-  const { data: allReviews } = useGetReviewList();
-  const { data: publicReviews } = useGetPublicReviews();
-  const { data: pendingReviews } = useGetPendingReviews();
-
-  return {
-    totalReviews: allReviews?.payload.totalItems ?? 0,
-    publicReviews: publicReviews?.payload.totalItems ?? 0,
-    pendingReviews: pendingReviews?.payload.totalItems ?? 0,
-    isLoading: !allReviews && !publicReviews && !pendingReviews,
-  };
+  return useQuery({
+    queryKey: ["review-stats"],
+    queryFn: async () => {
+      // Lấy page đầu tiên với limit tối đa để biết totalItems
+      const allReviewsResponse = await reviewApiRequests.list({ page: 1, limit: 100 });
+      const publicReviewsResponse = await reviewApiRequests.getPublicReviews({ page: 1, limit: 100 });
+      const pendingReviewsResponse = await reviewApiRequests.getPendingReviews({ page: 1, limit: 100 });
+      
+      return {
+        totalReviews: allReviewsResponse.payload?.totalItems || 0,
+        publicReviews: publicReviewsResponse.payload?.totalItems || 0,
+        pendingReviews: pendingReviewsResponse.payload?.totalItems || 0,
+      };
+    },
+    // Cache cho 2 phút vì thống kê không cần realtime
+    staleTime: 2 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+  });
 };
 
 // Hook for review filters

@@ -1,5 +1,10 @@
 "use client";
 
+import { PageSizeSelector } from "@/components/common/page-size-selector";
+import {
+  PaginationControls,
+  PaginationInfo,
+} from "@/components/common/pagination-controls";
 import { QosHealthCard } from "@/components/qos-health/QosHealthCard";
 import {
   OverallServiceStatus,
@@ -30,6 +35,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { QosInstanceStatus } from "@/constants/qos-instance.constant";
+import { useClientFilter, usePagination } from "@/hooks/usePagination";
 import {
   useDeleteQosInstanceMutation,
   useGetQosInstanceList,
@@ -88,14 +94,34 @@ const statusConfig = {
 };
 
 export default function QosInstancesPage() {
-  const [page, setPage] = useState(1);
-  const [limit] = useState(10);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Use pagination hook
+  const { currentPage, pageSize, handlePageChange, handlePageSizeChange } =
+    usePagination({
+      initialPage: 1,
+      initialPageSize: 10,
+    });
 
   const { data, isLoading, error, refetch, isFetching } = useGetQosInstanceList(
-    { page, limit }
+    { page: currentPage, limit: pageSize }
   );
   const deleteQosInstanceMutation = useDeleteQosInstanceMutation();
+
+  // Client-side filtering for current page data
+  const rawData = data?.payload?.data || [];
+  const filteredInstances = useClientFilter({
+    data: rawData,
+    searchTerm,
+    statusFilter: "all", // No status filter for QOS instances
+    searchFields: [
+      "subscription.restaurantName",
+      "user.name",
+      "user.email",
+      "dbName",
+    ],
+    statusField: "statusBE", // Dummy field since we don't filter by status
+  });
 
   const handleDelete = async (id: number, restaurantName: string) => {
     if (
@@ -114,6 +140,15 @@ export default function QosInstancesPage() {
     }
   };
 
+  const handleRefresh = async () => {
+    try {
+      await refetch();
+      toast.success("Đã cập nhật dữ liệu QOS instances thành công!");
+    } catch (error) {
+      toast.error("Có lỗi xảy ra khi tải dữ liệu");
+    }
+  };
+
   const getInitials = (name: string | null) => {
     if (!name) return "R";
     return name
@@ -124,23 +159,28 @@ export default function QosInstancesPage() {
       .slice(0, 2);
   };
 
-  const formatBytes = (bytes: number | null) => {
-    if (!bytes) return "0 MB";
-    const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + " " + sizes[i];
+  const handleClearSearch = () => {
+    setSearchTerm("");
   };
 
-  const filteredInstances =
-    data?.payload.data?.filter(
-      (instance) =>
-        instance.subscription.restaurantName
-          ?.toLowerCase()
-          .includes(searchQuery.toLowerCase()) ||
-        instance.user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        instance.user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        instance.dbName?.toLowerCase().includes(searchQuery.toLowerCase())
-    ) || [];
+  // Pagination data from API response
+  const paginationData = data?.payload
+    ? {
+        currentPage: data.payload.page,
+        totalPages: data.payload.totalPages,
+        totalItems: data.payload.totalItems,
+        limit: data.payload.limit,
+      }
+    : {
+        currentPage: 1,
+        totalPages: 1,
+        totalItems: 0,
+        limit: pageSize,
+      };
+
+  const hasSearch = searchTerm.length > 0;
+  const showingFiltered =
+    hasSearch && filteredInstances.length !== rawData.length;
 
   if (error) {
     return (
@@ -170,14 +210,7 @@ export default function QosInstancesPage() {
         </div>
         <div className="flex items-center gap-2">
           <Button
-            onClick={async () => {
-              try {
-                await refetch();
-                toast.success("Đã cập nhật dữ liệu QOS instances thành công!");
-              } catch (error) {
-                toast.error("Có lỗi xảy ra khi tải dữ liệu");
-              }
-            }}
+            onClick={handleRefresh}
             variant="outline"
             disabled={isFetching}
           >
@@ -197,13 +230,26 @@ export default function QosInstancesPage() {
 
       {/* Search */}
       <Card>
-        <CardContent className="pt-6">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <IconSearch className="size-5" />
+              Tìm kiếm
+            </CardTitle>
+            {hasSearch && (
+              <Button variant="outline" size="sm" onClick={handleClearSearch}>
+                Xóa tìm kiếm
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
           <div className="relative">
             <IconSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 size-4 text-muted-foreground" />
             <Input
               placeholder="Tìm kiếm theo tên nhà hàng, khách hàng, email hoặc database..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
             />
           </div>
@@ -213,14 +259,34 @@ export default function QosInstancesPage() {
       {/* QOS Instances Table */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <IconDatabase className="size-5" />
-            Danh sách QOS Instances
-          </CardTitle>
-          <CardDescription>
-            {filteredInstances.length} / {data?.payload.data?.length || 0}{" "}
-            instances
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <IconDatabase className="size-5" />
+                Danh sách QOS Instances
+              </CardTitle>
+              <CardDescription>
+                {showingFiltered ? (
+                  <>
+                    Hiển thị {filteredInstances.length} / {rawData.length} kết
+                    quả trên trang này
+                    {searchTerm && ` cho "${searchTerm}"`}
+                  </>
+                ) : (
+                  <>{filteredInstances.length} kết quả trên trang này</>
+                )}
+              </CardDescription>
+            </div>
+            {/* Page Size Selector ở góc phải */}
+            {!isLoading && paginationData.totalItems > 0 && (
+              <PageSizeSelector
+                pageSize={pageSize}
+                onPageSizeChange={handlePageSizeChange}
+                options={[5, 10, 20, 50]}
+                disabled={isFetching}
+              />
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -234,18 +300,22 @@ export default function QosInstancesPage() {
             </div>
           ) : filteredInstances.length === 0 ? (
             <div className="text-center py-12">
-              <IconDatabase className="size-12 mx-auto text-muted-foreground mb-4" />
+              <IconDatabase className="size-16 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">
-                {searchQuery
+                {hasSearch
                   ? "Không tìm thấy QOS Instance"
                   : "Chưa có QOS Instance nào"}
               </h3>
               <p className="text-muted-foreground mb-4">
-                {searchQuery
+                {hasSearch
                   ? "Thử thay đổi từ khóa tìm kiếm hoặc tạo instance mới"
                   : "Tạo QOS Instance đầu tiên để bắt đầu cung cấp dịch vụ"}
               </p>
-              {!searchQuery && (
+              {hasSearch ? (
+                <Button onClick={handleClearSearch} variant="outline">
+                  Xóa tìm kiếm
+                </Button>
+              ) : (
                 <Button asChild>
                   <Link href="/manage/qos-instances/create">
                     <IconPlus className="size-4 mr-2" />
@@ -255,152 +325,158 @@ export default function QosInstancesPage() {
               )}
             </div>
           ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nhà hàng & Khách hàng</TableHead>
-                    <TableHead>Trạng thái tổng quan</TableHead>
-                    <TableHead>Frontend Service</TableHead>
-                    <TableHead>Backend Service</TableHead>
-                    <TableHead>Health Metrics</TableHead>
-                    <TableHead className="w-[70px]">Thao tác</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredInstances.map((instance) => {
-                    return (
-                      <TableRow key={instance.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <Avatar className="size-8">
-                              <AvatarImage src={instance.user.avatar || ""} />
-                              <AvatarFallback className="text-xs">
-                                {getInitials(
-                                  instance.subscription.restaurantName
-                                )}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <div className="font-medium">
-                                {instance.subscription.restaurantName}
-                              </div>
-                              <div className="text-xs text-muted-foreground">
-                                {instance.user.name || instance.user.email}
-                              </div>
-                              <div className="text-xs text-muted-foreground">
-                                ID: {instance.id}
+            <div className="space-y-4">
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nhà hàng & Khách hàng</TableHead>
+                      <TableHead>Trạng thái tổng quan</TableHead>
+                      <TableHead>Frontend Service</TableHead>
+                      <TableHead>Backend Service</TableHead>
+                      <TableHead>Health Metrics</TableHead>
+                      <TableHead className="w-[70px]">Thao tác</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredInstances.map((instance) => {
+                      return (
+                        <TableRow key={instance.id}>
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <Avatar className="size-8">
+                                <AvatarImage src={instance.user.avatar || ""} />
+                                <AvatarFallback className="text-xs">
+                                  {getInitials(
+                                    instance.subscription.restaurantName
+                                  )}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <div className="font-medium">
+                                  {instance.subscription.restaurantName}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {instance.user.name || instance.user.email}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  ID: {instance.id}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        </TableCell>
+                          </TableCell>
 
-                        <TableCell>
-                          <OverallServiceStatus
-                            subscriptionId={instance.subscription.id}
-                            compact={true}
-                          />
-                        </TableCell>
+                          <TableCell>
+                            <OverallServiceStatus
+                              subscriptionId={instance.subscription.id}
+                              compact={true}
+                            />
+                          </TableCell>
 
-                        <TableCell>
-                          <ServiceStatusIndicator
-                            subscriptionId={instance.subscription.id}
-                            service="frontend"
-                            showUrl={false}
-                            compact={false}
-                          />
-                        </TableCell>
+                          <TableCell>
+                            <ServiceStatusIndicator
+                              subscriptionId={instance.subscription.id}
+                              service="frontend"
+                              showUrl={false}
+                              compact={false}
+                            />
+                          </TableCell>
 
-                        <TableCell>
-                          <ServiceStatusIndicator
-                            subscriptionId={instance.subscription.id}
-                            service="backend"
-                            showUrl={false}
-                            compact={false}
-                          />
-                        </TableCell>
+                          <TableCell>
+                            <ServiceStatusIndicator
+                              subscriptionId={instance.subscription.id}
+                              service="backend"
+                              showUrl={false}
+                              compact={false}
+                            />
+                          </TableCell>
 
-                        <TableCell>
-                          <QosHealthCard
-                            subscriptionId={instance.subscription.id}
-                            qosInstanceId={instance.id}
-                            compact={true}
-                          />
-                        </TableCell>
+                          <TableCell>
+                            <QosHealthCard
+                              subscriptionId={instance.subscription.id}
+                              qosInstanceId={instance.id}
+                              compact={true}
+                            />
+                          </TableCell>
 
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <IconDots className="size-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem asChild>
-                                <Link
-                                  href={`/manage/qos-instances/${instance.id}`}
+                          <TableCell>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm">
+                                  <IconDots className="size-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem asChild>
+                                  <Link
+                                    href={`/manage/qos-instances/${instance.id}`}
+                                  >
+                                    <IconEye className="size-4 mr-2" />
+                                    Xem chi tiết
+                                  </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                  <Link
+                                    href={`/manage/qos-instances/${instance.id}/edit`}
+                                  >
+                                    <IconEdit className="size-4 mr-2" />
+                                    Chỉnh sửa
+                                  </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="text-destructive"
+                                  onClick={() =>
+                                    handleDelete(
+                                      instance.id,
+                                      instance.subscription.restaurantName
+                                    )
+                                  }
+                                  disabled={deleteQosInstanceMutation.isPending}
                                 >
-                                  <IconEye className="size-4 mr-2" />
-                                  Xem chi tiết
-                                </Link>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem asChild>
-                                <Link
-                                  href={`/manage/qos-instances/${instance.id}/edit`}
-                                >
-                                  <IconEdit className="size-4 mr-2" />
-                                  Chỉnh sửa
-                                </Link>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="text-destructive"
-                                onClick={() =>
-                                  handleDelete(
-                                    instance.id,
-                                    instance.subscription.restaurantName
-                                  )
-                                }
-                                disabled={deleteQosInstanceMutation.isPending}
-                              >
-                                <IconTrash className="size-4 mr-2" />
-                                Xóa
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          )}
+                                  <IconTrash className="size-4 mr-2" />
+                                  Xóa
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
 
-          {/* Pagination */}
-          {data?.payload && data.payload.totalPages > 1 && (
-            <div className="flex items-center justify-between pt-4">
-              <div className="text-sm text-muted-foreground">
-                Trang {data.payload.page} / {data.payload.totalPages} (
-                {data.payload.totalItems} instances)
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(page - 1)}
-                  disabled={page <= 1}
-                >
-                  Trước
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(page + 1)}
-                  disabled={page >= data.payload.totalPages}
-                >
-                  Sau
-                </Button>
-              </div>
+              {/* Pagination info và navigation trong table */}
+              {!isLoading && paginationData.totalItems > 0 && (
+                <div className="border-t pt-4">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <PaginationInfo
+                        currentPage={paginationData.currentPage}
+                        totalPages={paginationData.totalPages}
+                        totalItems={paginationData.totalItems}
+                        limit={paginationData.limit}
+                        itemName="instances"
+                      />
+                      {hasSearch && (
+                        <div className="text-sm text-orange-600">
+                          Lọc: {filteredInstances.length} kết quả
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      {paginationData.totalPages > 1 && (
+                        <PaginationControls
+                          currentPage={paginationData.currentPage}
+                          totalPages={paginationData.totalPages}
+                          onPageChange={handlePageChange}
+                          disabled={isFetching}
+                        />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
